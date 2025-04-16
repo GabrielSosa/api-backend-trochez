@@ -1,30 +1,21 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
-import os
+from app.config import settings
 
-load_dotenv()
+# Crear el engine de SQLAlchemy
+engine = create_engine(settings.DATABASE_URL)
 
-# Configuración de la base de datos
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
-DB_PORT = os.getenv("DB_PORT")
-
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Crear una sesión de SQLAlchemy
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Crear una clase base para los modelos
+# Crear la base declarativa
 Base = declarative_base()
 
-# Crear metadatos y reflejar las tablas existentes
+# Crear metadata
 metadata = MetaData()
 
-# Dependency
+# Función para obtener la sesión de la base de datos
 def get_db():
     db = SessionLocal()
     try:
@@ -32,5 +23,6 @@ def get_db():
     finally:
         db.close()
 
-# Reflejar las tablas después de establecer la conexión
-metadata.reflect(bind=engine) 
+# Crear todas las tablas al iniciar
+def init_db():
+    Base.metadata.create_all(bind=engine) 

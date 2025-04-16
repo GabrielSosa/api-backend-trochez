@@ -5,11 +5,7 @@ from app.database import get_db
 from app.security.models.user_types import UserType
 from app.security.schemas.user_types import UserTypeCreate, UserTypeUpdate, UserTypeInDB
 
-router = APIRouter(
-    prefix="/api/security/user-types",
-    tags=["security"],
-    responses={404: {"description": "Not found"}},
-)
+router = APIRouter()
 
 @router.post("/", response_model=UserTypeInDB, status_code=status.HTTP_201_CREATED)
 def create_user_type(user_type: UserTypeCreate, db: Session = Depends(get_db)):
