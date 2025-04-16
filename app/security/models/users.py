@@ -12,5 +12,6 @@ class User(Base):
     email = Column(String(45), nullable=False)
     profile_picture_url = Column(String(150), nullable=True)
     change_pass = Column(Boolean, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
     created_date = Column(DateTime, nullable=False, server_default=func.now())
     updated_date = Column(DateTime, nullable=True, server_default=func.now(), onupdate=func.now()) 

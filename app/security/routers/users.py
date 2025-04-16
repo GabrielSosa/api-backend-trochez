@@ -5,7 +5,7 @@ from app.database import get_db
 from app.security.models.users import User
 from app.security.models.user_types import UserType
 from app.security.schemas.users import UserCreate, UserUpdate, UserInDB
-from app.security.utils import hash_password
+from app.security.utils import get_password_hash
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="El correo ya está registrado"
         )
     
-    hashed_password = hash_password(user.password)
+    hashed_password = get_password_hash(user.password)
     db_user = User(**user.model_dump(exclude={"password"}), password=hashed_password)
     db.add(db_user)
     db.commit()
@@ -62,7 +62,7 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     
     update_data = user.model_dump(exclude_unset=True)
     if "password" in update_data:
-        update_data["password"] = hash_password(update_data["password"])
+        update_data["password"] = get_password_hash(update_data["password"])
     for key, value in update_data.items():
         setattr(db_user, key, value)
     db.commit()

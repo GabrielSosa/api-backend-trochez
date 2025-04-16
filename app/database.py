@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.config import settings
+from app.core.config import settings
 
 # Crear el engine de SQLAlchemy
 engine = create_engine(settings.DATABASE_URL)
