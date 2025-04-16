@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.security.models.users import User
 import os
 from dotenv import load_dotenv
 
@@ -16,6 +20,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 
 # Configuración para el hash de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# OAuth2 scheme para obtener el token del header
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/security/token")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica si la contraseña en texto plano coincide con el hash."""
@@ -35,6 +42,41 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Obtiene el usuario actual basado en el token JWT.
+    Se usa como dependencia en las rutas protegidas.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales inválidas",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        # Decodificar el token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    # Buscar el usuario en la base de datos
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario inactivo"
+        )
+    
+    return user
 
 def decode_token(token: str) -> dict:
     """Decodifica un token JWT y retorna los datos contenidos."""
