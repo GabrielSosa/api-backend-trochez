@@ -1,0 +1,1 @@
+from app.appraisals.routers.appraisals import router as appraisals_router 
