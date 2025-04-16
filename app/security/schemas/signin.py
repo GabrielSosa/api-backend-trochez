@@ -6,10 +6,9 @@ class SignInRequest(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str = "bearer"
-    message: str = "OK"
+    token_type: str
+    message: str
 
 class TokenData(BaseModel):
-    email: EmailStr | None = None
-    user_id: int | None = None
-    user_type_id: int | None = None 
+    email: str | None = None
+    user_id: int | None = None 
