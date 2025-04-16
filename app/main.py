@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db
+from app.core.config import settings
+
+# Importar los routers
 from app.security.routers import user_types_router, users_router, signin_router
+from app.appraisals import appraisals_router
 
 app = FastAPI(
-    title="Trochez API",
-    description="API para el sistema de avalúos Trochez",
-    version="1.0.0"
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Configurar CORS
@@ -18,17 +21,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Inicializar la base de datos
-@app.on_event("startup")
-async def startup_event():
-    init_db()
+# Incluir los routers
+app.include_router(user_types_router, prefix=f"{settings.API_V1_STR}/security/user-types", tags=["user-types"])
+app.include_router(users_router, prefix=f"{settings.API_V1_STR}/security/users", tags=["users"])
+app.include_router(signin_router, prefix=f"{settings.API_V1_STR}/security", tags=["authentication"])
+app.include_router(appraisals_router, prefix=f"{settings.API_V1_STR}/appraisals", tags=["appraisals"])
 
-# Incluir routers
-app.include_router(user_types_router, prefix="/api/security/user-types", tags=["user-types"])
-app.include_router(users_router, prefix="/api/security/users", tags=["users"])
-app.include_router(signin_router, prefix="/api/security", tags=["auth"])
+# Inicializar la base de datos
+init_db()
 
 @app.get("/")
 def read_root():
-    return {"message": "Bienvenido a la API de Trochez"}
+    return {"message": "Bienvenido a la API de Gibson"}
 
