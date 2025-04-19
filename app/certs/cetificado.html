@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificado de Avalúo - Trochez</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .page-container {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 1cm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header-logo {
+            position: absolute;
+            top: 1cm;
+            left: 1cm;
+            padding: 0;
+            max-width: 200px;
+        }
+        /* Add watermark styling */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .watermark img {
+            max-width: 300px;
+        }
+        .header-info {
+            position: absolute;
+            top: 1cm;
+            right: 1cm;
+            text-align: right;
+            font-size: 14px;
+            border: 1px solid #000;
+            padding: 5px 10px;
+        }
+        .main-title {
+            text-align: center;
+            font-size: 26px;  /* Increased from 18px to 24px */
+            font-weight: bold;
+            margin-top: 3cm;
+            margin-bottom: 1cm;
+        }
+        .info-section {
+            background: #e0e0e0;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .info-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto auto;
+            gap: 10px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: bold;
+            padding: 5px;
+            background: #e0e0e0;
+        }
+        .info-value {
+            background: white;
+            padding: 5px;
+        }
+        .info-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .info-detail {
+            background: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .info-detail-label {
+            font-size: 10px;
+            color: #666;
+            display: block;
+        }
+        .diagnosis-table {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .diagnosis-table td {
+            padding: 5px 0;
+        }
+        .diagnosis-table td:last-child {
+            text-align: right;
+        }
+        .total-amount {
+            text-align: right;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .amount-text {
+            text-align: right;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .value-boxes {
+            display: flex;
+            justify-content: flex-start; /* Changed back to flex-start from center */
+            gap: 10px;
+            margin: 10px 0;
+            width: 100%;
+            padding-left: 50px; /* Added padding to move boxes a bit to the right */
+        }
+        .value-box {
+            border: 2px solid #000;
+            padding: 5px;
+            width: 300px;
+            text-align: center;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .footer-note {
+            font-size: 10px;
+            margin: 20px 0;
+            text-align: justify;
+            position: absolute;
+            bottom: 160px;
+            left: 1cm;
+            right: 1cm;
+        }
+        .vin-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+            position: absolute;
+            bottom: 80px;
+            left: 1cm;
+            right: 1cm;
+            background: white;
+        }
+        .vin-item {
+            text-align: center;
+        }
+        .vin-label {
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .validity-stamp {
+            position: absolute;
+            bottom: 20px;
+            right: 4cm;           /* Changed from 2cm to 3cm to move it more to the left */
+            border: 2px solid red;
+            color: red;
+            padding: 5px 10px;
+            transform: rotate(-90deg);
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            white-space: nowrap;
+            z-index: 1;
+        }
+        .vehicle-info {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .vehicle-info td {
+            padding: 5px;
+        }
+        .gray-bg {
+            background-color: #e0e0e0;
+        }
+        .white-bg {
+            background-color: white;
+        }
+        .label-cell {
+            font-weight: bold;
+            width: 100px;
+            background-color: #e0e0e0;
+        }
+        .small-label {
+            font-size: 10px;
+            color: #666;
+            display: block;
+        }
+        .border-bottom {
+            border-bottom: 1px solid #ccc;
+        }
+        .diagnosis-section {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .diagnosis-header {
+            background-color: #e0e0e0;
+            padding: 5px;
+            font-weight: bold;
+        }
+        .diagnosis-content {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .diagnosis-content td {
+            padding: 5px;
+            border-bottom: 1px dotted #ccc;
+        }
+        .diagnosis-content td:last-child {
+            text-align: right;
+            width: 150px;
+        }
+        .amount-container {
+            text-align: left;
+            width: 100%;
+            padding-left: 500px;    /* Added padding to move it to the right */
+            margin-left: 0;
+            margin-right: auto;
+        }
+        
+        .total-amount {
+            text-align: left;      /* Changed from right to left */
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .amount-text {
+            text-align: left;      /* Changed from right to left */
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .values-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;   /* Changed from flex-start to flex-end to align to the right */
+            margin-top: 20px;
+            width: 100%;
+        }
+        .expenses-row {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        .notes-section {
+            text-align: left;
+            font-size: 12px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header-logo">
+            <img src="../static/images/AvaluoTrochez.png" alt="Logo Avalúo Trochez" style="max-height: 100px; max-width: 100%;">
+        </div>
+        <!-- Add watermark -->
+        <div class="watermark">
+            <img src="../static/images/AvaluoTrochez.png" alt="Watermark">
+        </div>
+        <div class="header-info">
+            12 Abr 2025<br>
+            SAN JOSE C.R<br>
+            Tel. 8794-4104<br>
+            15683
+        </div>
+        <div class="main-title">Certificado de Avalúo</div>
+        
+        <div class="info-section" style="padding: 0; background: #e0e0e0; border-top: 2px solid #e0e0e0;">
+            <table class="vehicle-info" style="margin-bottom: 0;">
+                <tr>
+                    <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">VEHICULO</td>
+                    <td style="background-color: white; padding: 5px 10px; width: 30%;">
+                        <div>VOLKSWAGEN</div>
+                        <div>JETTA MK6 4 PUERTAS TODA EXTRA</div>
+                    </td>
+                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="text-align: center;"><span class="small-label">AÑO</span>2017</td>
+                                <td style="text-align: center;"><span class="small-label">ORIGEN</span>MEX/AGE</td>
+                                <td style="text-align: center;"><span class="small-label">KM</span>60 573</td>
+                                <td style="text-align: center;"><span class="small-label">COMB</span>GAS</td>
+                                <td style="text-align: center;"><span class="small-label">CILINDRADA</span>2.0</td>
+                            </tr>           
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Solicitante</td>
+                    <td style="background-color: white; padding: 5px 10px;" colspan="1">MANUEL USADOS (68267)</td>
+                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="text-align: left;"><span class="small-label">COLOR</span>GRIS</td>
+                                <td colspan="3"></td>
+                                <td style="text-align: right;"><span class="small-label">PLACAS</span>BLH467</td>
+                            </tr>         
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Propietario</td>
+                    <td style="background-color: white; padding: 5px 10px;" colspan="1">GARCIA GONZALEZ RODRIGO GERARDO</td>
+                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td colspan="6">
+                                    PAQUETE ELÉCTRICO, RADIO CD, AROS 16, HALÓGENOS, TRANSMISIÓN AUTOMÁTICA TIPTRONIC
+                                </td>
+                            </tr>       
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="diagnosis-header">Diagnostico</div>
+        <table class="diagnosis-content">
+            <tr>
+                <td>FUGA VOLANTE, VÁLVULA PCV, DESAJUSTE COLUMNA DIRECCIÓN</td>
+                <td>630 000</td>
+            </tr>
+            <tr>
+                <td>AJUSTE FRENO MANO, 4 AROS RAYADOS</td>
+                <td>250 000</td>
+            </tr>
+            <tr>
+                <td>CAMANANCES EN PUERTAS, FALDÓN Y GUARDABARRO IZQ, TAPA MOTOR, BOMPERS</td>
+                <td>600 000</td>
+            </tr>
+        </table>
+        
+        <div class="notes-section">
+            <div>10:00 AVALÚO SE HIZO 12/04/25 NUMERO OP SALES FORCE 14/4/25 2:10PM</div>
+            <div style="font-weight: bold;">NOTA: VEHÍCULO NO POSEE GRAVÁMENES ANOTACIONES NI LEVANTAMIENTOS</div>
+        </div>
+        
+        <div class="amount-container">
+            <div class="total-amount">$8 000</div>
+            <div class="amount-text">OCHO MIL DÓLARES</div>
+        </div>
+        
+        <div class="values-section">  
+            <div class="value-boxes">
+                <div class="value-box">VALOR MAXIMO DE GARANTIA BANCARIA</div>
+                <div class="value-box">VALOR SUGERIDO PARA ENTREGA EN DISTRIBUIDORA</div>
+            </div>
+        </div>
+        
+        <div class="expenses-row">
+            <table style="width: auto; margin-left: auto;">
+                <tr>
+                    <td style="text-align: right; padding-right: 20px;"><strong>TOTAL DE GASTOS</strong></td>
+                    <td><strong>₡1 480 000</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer-note">
+            Nota: Los gastos de reparación y la depreciación por kilometraje están rebajados. Condiciones de Servicio: En lo sucesivo "la empresa" se refiere a Avalúos Trochez. El valor emitido en este documento se ha determinado en base a la experiencia de ventas pasada de autolotes y personas particulares y no podemos anticipar todos los factores presentes o futuros que afecten el mercado de Vehículos y por lo tanto modifiquen el valor de los mismos incluyendo pero limitándose a el valor de los combustibles, la tasa de impuestos de nuevos modelos o promociones especiales, la suspensión de producción o distribución de determinado modelo, publicidad positiva o negativa, percepciones, informes de desperfectos, cambios políticos o demográficos, desastres naturales y otras situaciones que tengan influencia sobre los valores de Vehículos.
+        </div>
+
+        <div class="vin-section">
+            <div class="vin-item">
+                <div class="vin-label">VIN</div>
+                <div>3VW2K1AJOHM200298</div>
+            </div>
+            <div class="vin-item">
+                <div class="vin-label"># Motor</div>
+                <div>CBP738227</div>
+            </div>
+            <div class="vin-item">
+                <div class="vin-label">VIN en tarjeta</div>
+                <div>IDEM</div>
+            </div>
+            <div class="vin-item">
+                <div class="vin-label"># Motor en tarjeta</div>
+                <div>IDEM</div>
+            </div>
+        </div>
+
+        <div class="validity-stamp">
+            VALIDO POR 30 DIAS O 1.000 KMS
+        </div>
+    </div>
+</body>
+</html>
