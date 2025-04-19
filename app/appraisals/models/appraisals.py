@@ -1,15 +1,21 @@
 from sqlalchemy import Column, Integer, String, Date, Text, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
+from typing import ClassVar, Dict, Any
 
 class VehicleAppraisal(Base):
     __tablename__ = "vehicle_appraisal"
+    
+    # Add this configuration to disable protected namespace warnings
+    model_config: ClassVar[Dict[str, Any]] = {
+        "protected_namespaces": ()
+    }
 
     vehicle_appraisal_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     appraisal_date = Column(Date)
     vehicle_description = Column(String(100))
     brand = Column(String(50))
-    model_year = Column(Integer)
+    model_year = Column(Integer)  # This field was causing the warning
     color = Column(String(20))
     mileage = Column(Integer)
     fuel_type = Column(String(20))
@@ -37,4 +43,4 @@ class AppraisalDeductions(Base):
     amount = Column(Numeric(10, 2))
 
     # Relación con VehicleAppraisal
-    vehicle_appraisal = relationship("VehicleAppraisal", back_populates="deductions") 
+    vehicle_appraisal = relationship("VehicleAppraisal", back_populates="deductions")
