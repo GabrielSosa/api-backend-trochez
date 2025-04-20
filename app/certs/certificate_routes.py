@@ -4,11 +4,18 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 # Importar la sesión de base de datos
-from app.database import SessionLocal
+from app.database import get_db # Changed from SessionLocal to get_db
 
 # Corregir las importaciones para usar los modelos correctos
 from app.appraisals.models.appraisals import VehicleAppraisal, AppraisalDeductions
 from app.certs.certificate_service import CertificateService
+
+# --- Add these imports ---
+# Import the JWT dependency function and User model from the security module
+from app.security.utils import get_current_user
+from app.security.models.users import User
+# --- End Add ---
+
 
 router = APIRouter(
     prefix="/certificates",
@@ -17,27 +24,26 @@ router = APIRouter(
 )
 
 # Definir la dependencia para obtener la sesión de base de datos
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Removed the local get_db definition as it should be imported from app.database
 
 @router.get("/appraisal/{vehicle_appraisal_id}")
 async def generate_appraisal_certificate(
     vehicle_appraisal_id: int,
     db: Session = Depends(get_db),
-    download: Optional[bool] = False
+    download: Optional[bool] = False,
+    # --- Add this dependency ---
+    current_user: User = Depends(get_current_user) # Require valid JWT
+    # --- End Add ---
 ):
     """
-    Generate a PDF certificate for a vehicle appraisal.
+    Generate a PDF certificate for a vehicle appraisal. Requires authentication.
     
     Args:
         vehicle_appraisal_id: ID of the vehicle appraisal
         db: Database session
         download: If True, the PDF will be downloaded, otherwise it will be displayed in the browser
-    
+        current_user: The authenticated user object (from JWT token)
+
     Returns:
         PDF file response
     """
