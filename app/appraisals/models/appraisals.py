@@ -6,8 +6,7 @@ from typing import ClassVar, Dict, Any
 class VehicleAppraisal(Base):
     __tablename__ = "vehicle_appraisal"
     
-    # Add this configuration to disable protected namespace warnings
-    model_config: ClassVar[Dict[str, Any]] = {
+    model_config = {
         "protected_namespaces": ()
     }
 

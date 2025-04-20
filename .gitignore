@@ -25,7 +25,11 @@ wheels/
 *.egg
 
 # Entornos virtuales
+# Python Virtual Environment
 venv/
+
+# Remove the old entry if it exists
+# venv_py311/
 ENV/
 env/
 
@@ -40,4 +44,4 @@ env/
 
 # Archivos de sistema
 .DS_Store
-Thumbs.db 
+Thumbs.db
