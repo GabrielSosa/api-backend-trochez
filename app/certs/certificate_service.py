@@ -11,7 +11,7 @@ class CertificateService:
         # Set up paths
         self.base_dir = Path(__file__).parent
         self.template_dir = self.base_dir
-        self.static_dir = self.base_dir.parent / "static"
+        self.static_dir = self.base_dir.parent / "static" # Absolute path to app/static
         
         # Create temp directory if it doesn't exist
         self.temp_dir = self.base_dir.parent / "temp"
@@ -21,7 +21,11 @@ class CertificateService:
         self.env = Environment(loader=FileSystemLoader(self.template_dir))
         
         # Add a static_url function to the Jinja environment
-        self.env.globals['static_url'] = self.static_url
+        # --- Change this line to use the new absolute URL function ---
+        self.env.globals['static_url'] = self.static_url_absolute
+        # --- End Change ---
+        self.env.globals['formatted_date'] = self.format_date
+        self.env.globals['number_to_words'] = self.number_to_words
         
         # Set locale for date formatting
         try:
@@ -32,7 +36,25 @@ class CertificateService:
             except:
                 pass  # Fall back to default locale if Spanish is not available
     
-    def static_url(self, path):
+    # Optional: Keep the old relative path function if needed elsewhere
+    # def static_url(self, path):
+    #     """Generate a relative URL for static files"""
+    #     return f"../static/{path}"
+    
+    # --- Add this function ---
+    def static_url_absolute(self, path):
+        """Generate an absolute file:// URL for static files"""
+        absolute_path = self.static_dir / path
+        # Ensure the path exists and convert to file URI
+        if absolute_path.exists():
+             return absolute_path.as_uri()
+        else:
+             # Handle missing file case - maybe return empty string or log warning
+             print(f"Warning: Static file not found at {absolute_path}")
+             return "" # Or raise an error
+    # --- End Add ---
+
+    def format_date(self, date_obj):
         """Generate a URL for static files"""
         return f"../static/{path}"
     
@@ -84,6 +106,10 @@ class CertificateService:
         
         # Generate PDF using WeasyPrint
         base_url = self.base_dir.as_uri()
+        # --- Modify HTML object creation ---
+        # No base_url needed when using absolute file:// URLs for assets
+        html = HTML(string=html_content)
+        # --- End Modify ---
         HTML(string=html_content, base_url=base_url).write_pdf(
             output_path,
             stylesheets=[
