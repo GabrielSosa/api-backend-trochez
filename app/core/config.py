@@ -1,32 +1,46 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Trochez API"
-    VERSION: str = "1.0.0"
-    API_V1_STR: str = "/api"
+    # Project settings
+    PROJECT_NAME: str = "Avalúos Trochez API"  # Add default project name
+    API_V1_STR: str = "/api/v1"  # Add API version prefix
     
-    # JWT
+    # JWT settings
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
-    
-    # Database
+
+    # Database settings - updated to match .env file variable names
     DB_HOST: str
+    DB_PORT: str
     DB_USER: str
     DB_PASSWORD: str
     DB_NAME: str
-    DB_PORT: str
+
+    # Alias properties to maintain compatibility with existing code
+    @property
+    def MYSQL_HOST(self) -> str:
+        return self.DB_HOST
     
     @property
-    def DATABASE_URL(self) -> str:
-        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    def MYSQL_PORT(self) -> str:
+        return self.DB_PORT
+    
+    @property
+    def MYSQL_USER(self) -> str:
+        return self.DB_USER
+    
+    @property
+    def MYSQL_PASSWORD(self) -> str:
+        return self.DB_PASSWORD
+    
+    @property
+    def MYSQL_DB(self) -> str:
+        return self.DB_NAME
 
     class Config:
-        case_sensitive = True
         env_file = ".env"
+        case_sensitive = True
 
-settings = Settings() 
+settings = Settings()
