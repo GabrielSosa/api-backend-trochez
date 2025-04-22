@@ -2,18 +2,28 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
-import pymysql
+import os
 
 # Create metadata object
 metadata = MetaData()
 
-# Construct the database URL
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DB}"
+# For Render PostgreSQL, we need to use a more specific connection string
+# with explicit SSL parameters
+DB_URL = os.environ.get("DATABASE_URL", None)
 
-# Create the engine
+if not DB_URL:
+    # Construct the database URL for PostgreSQL with explicit SSL parameters
+    DB_URL = f"postgresql://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DB}"
+
+# Create the engine with modified configuration
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    pool_recycle=3600,  # Recycle connections older than 1 hour
+    DB_URL,
+    # Remove SSL parameters from here as they're in the URL
+    echo=False,  # Set to False in production
+    pool_pre_ping=True,
+    pool_recycle=300,
+    # Add connect_args only if needed for local development
+    # connect_args={"sslmode": "prefer"}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -28,15 +38,16 @@ def get_db():
     finally:
         db.close()
 
-# Add the missing init_db function
+# Initialize database function
 def init_db():
     """
     Initialize the database by creating all tables.
     This function should be called when the application starts.
     """
     # Import all models here to ensure they are registered with the Base metadata
-    # For example:
-    # from app.security.models.users import User
+    from app.security.models.users import User
+    from app.security.models.user_types import UserType
+    # Uncomment if these models exist
     # from app.appraisals.models.appraisals import VehicleAppraisal, AppraisalDeductions
     
     # Create all tables

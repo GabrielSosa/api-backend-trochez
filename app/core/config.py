@@ -3,8 +3,8 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Project settings
-    PROJECT_NAME: str = "Avalúos Trochez API"  # Add default project name
-    API_V1_STR: str = "/api/v1"  # Add API version prefix
+    PROJECT_NAME: str = "Avalúos Trochez API"
+    API_V1_STR: str = "/api/v1"
     
     # JWT settings
     SECRET_KEY: str
