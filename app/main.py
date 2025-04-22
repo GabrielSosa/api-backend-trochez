@@ -43,5 +43,5 @@ init_db()
 
 @app.get("/")
 def read_root():
-    return {"message": "Bienvenido a la API de Trcohez"}
+    return {"message": "Bienvenido a la API de Trochez"}
 
