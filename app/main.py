@@ -30,7 +30,6 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Incluir los routers
-app.include_router(user_types_router, prefix=f"{settings.API_V1_STR}/security/user-types", tags=["user-types"])
 app.include_router(users_router, prefix=f"{settings.API_V1_STR}/security/users", tags=["users"])
 app.include_router(signin_router, prefix=f"{settings.API_V1_STR}/security", tags=["authentication"])
 app.include_router(appraisals_router, prefix=f"{settings.API_V1_STR}/appraisals", tags=["appraisals"])

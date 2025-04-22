@@ -4,7 +4,7 @@ from typing import Optional
 class Settings(BaseSettings):
     # Project settings
     PROJECT_NAME: str = "Avalúos Trochez API"
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = "/api"
     
     # JWT settings
     SECRET_KEY: str
