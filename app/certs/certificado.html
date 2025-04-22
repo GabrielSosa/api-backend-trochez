@@ -5,7 +5,8 @@
     <title>Certificado de Avalúo - Trochez</title>
     <style>
         @page {
-            size: A4;
+            /* Change page size from A4 to letter */
+            size: letter;
             margin: 0;
         }
         body {
@@ -15,8 +16,9 @@
             background-color: white;
         }
         .page-container {
-            width: 21cm;
-            height: 29.7cm;
+            /* Adjust dimensions to Letter size (approx 8.5in x 11in) */
+            width: 21.59cm;
+            height: 27.94cm;
             padding: 1cm;
             margin: 0 auto;
             background: white;
@@ -40,16 +42,18 @@
             pointer-events: none;
         }
         .watermark img {
-            max-width: 300px;
+            /* Increase max-width to make the watermark larger */
+            max-width: 450px;
         }
         .header-info {
             position: absolute;
             top: 1cm;
             right: 1cm;
-            text-align: right;
+            text-align: right; /* Keep overall alignment right for other lines */
             font-size: 14px;
             border: 1px solid #000;
-            padding: 5px 10px;
+            /* Increase padding to make the box larger */
+            padding: 10px 15px; /* Increased from 5px 10px */
         }
         .main-title {
             text-align: center;
@@ -162,6 +166,7 @@
             margin: 20px 0;
             text-align: justify;
             position: absolute;
+            /* Revert bottom position */
             bottom: 160px;
             left: 1cm;
             right: 1cm;
@@ -173,6 +178,7 @@
             border-top: 1px solid #000;
             padding-top: 10px;
             position: absolute;
+            /* Revert bottom position */
             bottom: 80px;
             left: 1cm;
             right: 1cm;
@@ -185,27 +191,32 @@
             font-weight: bold;
             font-size: 12px;
         }
+        /* Adjust validity stamp for horizontal layout */
         .validity-stamp {
             position: absolute;
-            bottom: 20px;
-            right: 4cm;
+            /* Adjust position for horizontal layout */
+            bottom: 10px; /* Position near bottom edge */
+            right: 1cm;   /* Keep near right edge */
             border: 2px solid red;
             color: red;
             padding: 5px 10px;
-            transform: rotate(-90deg);
-            transform-origin: right top;
+            /* Remove rotation and vertical writing styles */
+            /* transform: rotate(-90deg); */
+            /* transform-origin: right bottom; */
             font-weight: bold;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
+            /* writing-mode: vertical-rl; */
+            /* text-orientation: mixed; */
             white-space: nowrap;
             z-index: 1;
+            text-align: right; /* Align text if needed */
         }
     </style>
 </head>
 <body>
     <div class="page-container">
         <div class="header-logo">
-            <img src="{{ static_url('images/AvaluoTrochez.png') }}" alt="Logo Avalúo Trochez" style="max-height: 100px; max-width: 100%;">
+            <!-- Increase max-height from 100px to 120px -->
+            <img src="{{ static_url('images/AvaluoTrochez.png') }}" alt="Logo Avalúo Trochez" style="max-height: 130px; max-width: 100%;">
         </div>
         <!-- Add watermark -->
         <div class="watermark">
@@ -215,17 +226,17 @@
             {{ formatted_date }}<br>
             SAN JOSE C.R<br>
             Tel. 8794-4104<br>
-            {{ appraisal.vehicle_appraisal_id }}
+            <!-- Wrap the ID in a div and center it -->
+            <div style="text-align: center; margin-top: 5px;">{{ appraisal.vehicle_appraisal_id }}</div>
         </div>
         <div class="main-title">Certificado de Avalúo</div>
         
         <div class="info-section" style="padding: 0; background: #e0e0e0; border-top: 2px solid #e0e0e0;">
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
-                    <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">VEHICULO</td>
+                    <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
                     <td style="background-color: white; padding: 5px 10px; width: 30%;">
-                        <div>{{ appraisal.brand }}</div>
-                        <div>{{ appraisal.vehicle_description }}</div>
+                        <div>{{ appraisal.brand }} {{ appraisal.vehicle_description }}</div>
                     </td>
                     <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
                         <table style="width: 100%;">
@@ -327,7 +338,8 @@
             </div>
         </div>
 
-        <div class="validity-stamp" style="transform: none; writing-mode: horizontal-tb; text-orientation: initial; bottom: 30px; right: 1cm;">
+        <!-- Restore validity stamp here, remove inline styles -->
+        <div class="validity-stamp">
             VALIDO POR {{ appraisal.validity_days }} DIAS O {{ appraisal.validity_kms }} KMS
         </div>
     </div>
