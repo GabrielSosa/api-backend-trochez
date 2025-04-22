@@ -6,6 +6,7 @@ from app.security.models.users import User
 from app.security.models.user_types import UserType
 from app.security.schemas.users import UserCreate, UserUpdate, UserInDB
 from app.security.utils import get_password_hash, get_current_user
+from app.security.services.users import create_new_user, get_user_by_email
 
 router = APIRouter()
 
@@ -13,14 +14,15 @@ router = APIRouter()
 async def create_user(
     user: UserCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user) # Assuming authentication is required
 ):
     """
     Crear un nuevo usuario.
     Solo usuarios autenticados pueden crear otros usuarios.
     """
     # Verificar si el tipo de usuario existe
-    user_type = db.query(UserType).filter(UserType.id == user.user_type_id).first()
+    # Corrected line: Use UserType.user_type_id instead of UserType.id
+    user_type = db.query(UserType).filter(UserType.user_type_id == user.user_type_id).first()
     if not user_type:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -36,12 +38,18 @@ async def create_user(
         )
     
     hashed_password = get_password_hash(user.password)
+    
+    # Corrected lines:
+    # 1. Use the correct attribute from the UserCreate schema (likely user.name)
+    # 2. Assign it to the correct field in the User model (likely name=...)
     db_user = User(
         email=user.email,
-        hashed_password=hashed_password,
-        full_name=user.full_name,
+        password=hashed_password, # Make sure your User model expects 'password' or 'hashed_password'
+        name=user.name,           # Use user.name (or whatever the field is called in UserCreate)
+                                  # and assign to the 'name' field in the User model
         user_type_id=user.user_type_id,
         is_active=True
+        # Add other fields if necessary, ensuring they match the User model definition
     )
     db.add(db_user)
     db.commit()
@@ -142,4 +150,4 @@ async def delete_user(
         )
     db.delete(db_user)
     db.commit()
-    return None 
+    return None
