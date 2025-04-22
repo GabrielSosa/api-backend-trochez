@@ -40,9 +40,13 @@ class VehicleAppraisalBase(BaseModel):
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
 
+# Add a new schema for updating appraisals
+class VehicleAppraisalUpdate(VehicleAppraisalBase):
+    deductions: List[AppraisalDeductionsCreate] # Include deductions for update
+
 class VehicleAppraisal(VehicleAppraisalBase):
     vehicle_appraisal_id: int
     deductions: List[AppraisalDeductions]
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
