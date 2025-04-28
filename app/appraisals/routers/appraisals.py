@@ -35,12 +35,15 @@ async def create_vehicle_appraisal(
         applicant=appraisal.applicant,
         owner=appraisal.owner,
         appraisal_value_usd=appraisal.appraisal_value_usd,
-        appraisal_value_local=appraisal.appraisal_value_local,
+        appraisal_value_trochez=appraisal.appraisal_value_trochez,
         vin=appraisal.vin,
         engine_number=appraisal.engine_number,
         notes=appraisal.notes,
         validity_days=appraisal.validity_days,
-        validity_kms=appraisal.validity_kms
+        validity_kms=appraisal.validity_kms,
+        apprasail_value_lower_cost=appraisal.apprasail_value_lower_cost,
+        apprasail_value_bank=appraisal.apprasail_value_bank,
+        apprasail_value_lower_bank=appraisal.apprasail_value_lower_bank
     )
     db.add(db_appraisal)
     db.flush()  # Para obtener el ID generado
@@ -123,7 +126,9 @@ async def update_vehicle_appraisal(
         )
 
     # Update the main appraisal fields
-    update_data = appraisal_update.model_dump(exclude_unset=True, exclude={'deductions'}) # Exclude deductions for now
+    # This part implicitly handles the renamed and new fields
+    # as long as VehicleAppraisalUpdate schema is correct.
+    update_data = appraisal_update.model_dump(exclude_unset=True, exclude={'deductions'})
     for key, value in update_data.items():
         setattr(db_appraisal, key, value)
 
