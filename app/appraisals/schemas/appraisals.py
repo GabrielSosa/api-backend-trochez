@@ -25,20 +25,24 @@ class VehicleAppraisalBase(BaseModel):
     color: str = Field(..., max_length=20)
     mileage: int = Field(..., ge=0)
     fuel_type: str = Field(..., max_length=20)
-    engine_size: Decimal = Field(..., ge=0, decimal_places=1) # Keep precision 3,1 for engine_size
+    # Remove decimal_places from engine_size
+    engine_size: Decimal = Field(..., ge=0)
     plate_number: str = Field(..., max_length=20)
     applicant: str = Field(..., max_length=100)
     owner: str = Field(..., max_length=100)
-    appraisal_value_usd: Decimal = Field(..., ge=0, max_digits=18, decimal_places=2)
-    appraisal_value_trochez: Decimal = Field(..., ge=0, max_digits=18, decimal_places=2)
+    # Remove decimal_places constraint
+    appraisal_value_usd: Decimal = Field(..., ge=0)
+    # Remove decimal_places constraint
+    appraisal_value_trochez: Decimal = Field(..., ge=0)
     vin: str = Field(..., max_length=20)
     engine_number: str = Field(..., max_length=20)
     notes: str | None = None
     validity_days: int = Field(..., ge=0)
     validity_kms: int = Field(..., ge=0)
-    apprasail_value_lower_cost: Decimal = Field(..., ge=0, max_digits=18, decimal_places=2)
-    apprasail_value_bank: Decimal = Field(..., ge=0, max_digits=18, decimal_places=2)
-    apprasail_value_lower_bank: Decimal = Field(..., ge=0, max_digits=18, decimal_places=2)
+    # Remove decimal_places constraint from new optional fields
+    apprasail_value_lower_cost: Decimal | None = Field(default=None, ge=0)
+    apprasail_value_bank: Decimal | None = Field(default=None, ge=0)
+    apprasail_value_lower_bank: Decimal | None = Field(default=None, ge=0)
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
