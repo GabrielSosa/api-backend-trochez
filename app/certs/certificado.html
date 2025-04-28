@@ -166,7 +166,6 @@
             margin: 20px 0;
             text-align: justify;
             position: absolute;
-            /* Revert bottom position */
             bottom: 160px;
             left: 1cm;
             right: 1cm;
@@ -216,17 +215,16 @@
     <div class="page-container">
         <div class="header-logo">
             <!-- Increase max-height from 100px to 120px -->
-            <img src="{{ static_url('images/AvaluoTrochez.png') }}" alt="Logo Avalúo Trochez" style="max-height: 130px; max-width: 100%;">
+            <img src="{{ static_url('images/AvaluoTrochez.png') }}" alt="Logo Avalúo Trochez" style="max-height: 180px; max-width: 100%;">
         </div>
         <!-- Add watermark -->
         <div class="watermark">
             <img src="{{ static_url('images/AvaluoTrochez.png') }}" alt="Watermark">
         </div>
         <div class="header-info">
-            {{ formatted_date }}<br>
+            <div style="text-align: center;">{{ formatted_date }}</div>
             SAN JOSE C.R<br>
             Tel. 8794-4104<br>
-            <!-- Wrap the ID in a div and center it -->
             <div style="text-align: center; margin-top: 5px;">{{ appraisal.vehicle_appraisal_id }}</div>
         </div>
         <div class="main-title">Certificado de Avalúo</div>
@@ -319,23 +317,41 @@
             Nota: Los gastos de reparación y la depreciación por kilometraje están rebajados. Condiciones de Servicio: En lo sucesivo "la empresa" se refiere a Avalúos Trochez. El valor emitido en este documento se ha determinado en base a la experiencia de ventas pasada de autolotes y personas particulares y no podemos anticipar todos los factores presentes o futuros que afecten el mercado de Vehículos y por lo tanto modifiquen el valor de los mismos incluyendo pero limitándose a el valor de los combustibles, la tasa de impuestos de nuevos modelos o promociones especiales, la suspensión de producción o distribución de determinado modelo, publicidad positiva o negativa, percepciones, informes de desperfectos, cambios políticos o demográficos, desastres naturales y otras situaciones que tengan influencia sobre los valores de Vehículos.
         </div>
 
-        <div class="vin-section">
-            <div class="vin-item">
-                <div class="vin-label">VIN</div>
-                <div>{{ appraisal.vin }}</div>
-            </div>
-            <div class="vin-item">
-                <div class="vin-label"># Motor</div>
-                <div>{{ appraisal.engine_number }}</div>
-            </div>
-            <div class="vin-item">
-                <div class="vin-label">VIN en tarjeta</div>
-                <div>IDEM</div>
-            </div>
-            <div class="vin-item">
-                <div class="vin-label"># Motor en tarjeta</div>
-                <div>IDEM</div>
-            </div>
+        <div class="vin-section" style="padding: 0;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <tr style="background: #e0e0e0;">
+                    <td style="width: 50%; padding: 1px 12px;">
+                        <span class="vin-label">VIN</span>
+                    </td>
+                    <td style="width: 50%; padding: 1px 12px;">
+                        <span class="vin-label"># Motor</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border-bottom: 2px solid #e0e0e0; padding: 4px 12px;">
+                        <span>{{ appraisal.vin }}</span>
+                    </td>
+                    <td style="border-bottom: 2px solid #e0e0e0; padding: 4px 12px;">
+                        <span>{{ appraisal.engine_number }}</span>
+                    </td>
+                </tr>
+                <tr style="background: #e0e0e0;">
+                    <td style="padding: 1px 12px;">
+                        <span class="vin-label">VIN en tarjeta</span>
+                    </td>
+                    <td style="padding: 1px 12px;">
+                        <span class="vin-label"># Motor en tarjeta</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px 12px;">
+                        <span>{{ appraisal.vin }}</span>
+                    </td>
+                    <td style="padding: 4px 12px;">
+                        <span>{{ appraisal.engine_number }}</span>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- Restore validity stamp here, remove inline styles -->
