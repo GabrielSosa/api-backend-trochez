@@ -83,6 +83,16 @@ class CertificateService:
         formatted_total_deductions = f"₡{total_deductions:,}".replace(",", " ")
         formatted_appraisal_value = f"${vehicle_appraisal.appraisal_value_usd:,}".replace(",", " ")
         
+        if vehicle_appraisal.apprasail_value_lower_bank is not None:
+            appraisal_value_crc_raw = vehicle_appraisal.apprasail_value_lower_bank
+            formatted_appraisal_value_crc = f"₡{appraisal_value_crc_raw:,}".replace(",", " ")
+            appraisal_value_int_crc = int(appraisal_value_crc_raw)
+            appraisal_value_words_crc = self.number_to_words(appraisal_value_int_crc)
+        else:
+            appraisal_value_crc_raw = 0
+            formatted_appraisal_value_crc = ""
+            appraisal_value_words_crc = ""
+        
         # Convert appraisal value to words - convert Decimal to int
         appraisal_value_int = int(vehicle_appraisal.appraisal_value_usd)
         appraisal_value_words = self.number_to_words(appraisal_value_int)
@@ -94,7 +104,10 @@ class CertificateService:
             "formatted_date": formatted_date,
             "total_deductions": formatted_total_deductions,
             "appraisal_value": formatted_appraisal_value,
-            "appraisal_value_words": appraisal_value_words
+            "appraisal_value_words": appraisal_value_words,
+            "appraisal_value_crc_raw": appraisal_value_crc_raw,
+            "appraisal_value_crc": formatted_appraisal_value_crc,
+            "appraisal_value_words_crc": appraisal_value_words_crc
         }
         
         # Render HTML template

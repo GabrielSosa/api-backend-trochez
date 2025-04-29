@@ -292,16 +292,33 @@
             <div style="font-weight: bold;">NOTA: {{ appraisal.notes }}</div>
         </div>
         
-        <div class="amount-container">
-            <div class="total-amount">{{ appraisal_value }}</div>
-            <div class="amount-text">{{ appraisal_value_words }} DÓLARES</div>
-        </div>
-        
-        <div class="values-section">  
-            <div class="value-boxes">
-                <div class="value-box">VALOR MAXIMO DE GARANTIA BANCARIA</div>
-                <div class="value-box">VALOR SUGERIDO PARA ENTREGA EN DISTRIBUIDORA</div>
-            </div>
+        <div class="values-section" style="margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 40px 0;">
+                <tr>
+                    <td style="text-align: center; vertical-align: middle; height: 80px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                            {% if appraisal_value_crc_raw and appraisal_value_crc_raw > 0 %}
+                                <div class="total-amount">{{ appraisal_value_crc }}</div>
+                                <div class="amount-text">{{ appraisal_value_words_crc }} COLONES</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle; height: 80px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                            <div class="total-amount">{{ appraisal_value }}</div>
+                            <div class="amount-text">{{ appraisal_value_words }} DÓLARES</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <div class="value-box">VALOR MAXIMO DE GARANTIA BANCARIA</div>
+                    </td>
+                    <td style="text-align: center;">
+                        <div class="value-box">VALOR SUGERIDO PARA ENTREGA EN DISTRIBUIDORA</div>
+                    </td>
+                </tr>
+            </table>
         </div>
         
         <div class="expenses-row">
