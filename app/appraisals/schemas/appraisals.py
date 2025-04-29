@@ -43,6 +43,7 @@ class VehicleAppraisalBase(BaseModel):
     apprasail_value_lower_cost: Decimal | None = Field(default=None, ge=0)
     apprasail_value_bank: Decimal | None = Field(default=None, ge=0)
     apprasail_value_lower_bank: Decimal | None = Field(default=None, ge=0)
+    extras: str | None = None
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
