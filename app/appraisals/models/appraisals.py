@@ -33,6 +33,8 @@ class VehicleAppraisal(Base):
     validity_days = Column(Integer)
     validity_kms = Column(Integer)
     extras = Column(Text, nullable=True) 
+    vin_card = Column(String(20), nullable=True)
+    engine_number_card = Column(String(20), nullable=True)
 
     # Relación con AppraisalDeductions
     deductions = relationship("AppraisalDeductions", back_populates="vehicle_appraisal", cascade="all, delete-orphan")

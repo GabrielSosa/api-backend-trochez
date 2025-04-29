@@ -39,11 +39,12 @@ class VehicleAppraisalBase(BaseModel):
     notes: str | None = None
     validity_days: int = Field(..., ge=0)
     validity_kms: int = Field(..., ge=0)
-    # Remove decimal_places constraint from new optional fields
     apprasail_value_lower_cost: Decimal | None = Field(default=None, ge=0)
     apprasail_value_bank: Decimal | None = Field(default=None, ge=0)
     apprasail_value_lower_bank: Decimal | None = Field(default=None, ge=0)
     extras: str | None = None
+    vin_card: str | None = Field(default=None, max_length=20)
+    engine_number_card: str | None = Field(default=None, max_length=20)
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
