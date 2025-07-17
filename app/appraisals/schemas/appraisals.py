@@ -1,7 +1,7 @@
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class AppraisalDeductionsBase(BaseModel):
     description: str
@@ -18,33 +18,47 @@ class AppraisalDeductions(AppraisalDeductionsBase):
         from_attributes = True
 
 class VehicleAppraisalBase(BaseModel):
-    appraisal_date: date
-    vehicle_description: str = Field(..., max_length=100)
-    brand: str = Field(..., max_length=50)
-    model_year: int = Field(..., ge=1900, le=date.today().year + 1)
-    color: str = Field(..., max_length=20)
-    mileage: int = Field(..., ge=0)
-    fuel_type: str = Field(..., max_length=20)
-    # Remove decimal_places from engine_size
-    engine_size: Decimal = Field(..., ge=0)
-    plate_number: str = Field(..., max_length=20)
-    applicant: str = Field(..., max_length=100)
-    owner: str = Field(..., max_length=100)
-    # Remove decimal_places constraint
-    appraisal_value_usd: Decimal = Field(..., ge=0)
-    # Remove decimal_places constraint
-    appraisal_value_trochez: Decimal = Field(..., ge=0)
-    vin: str = Field(..., max_length=20)
-    engine_number: str = Field(..., max_length=20)
+    appraisal_date: date | None = None
+    vehicle_description: str | None = Field(None, max_length=100)
+    brand: str | None = Field(None, max_length=50)
+    model_year: int | None = Field(None, ge=1900, le=date.today().year + 1)
+    color: str | None = Field(None, max_length=20)
+    mileage: int | None = Field(None, ge=0)
+    fuel_type: str | None = Field(None, max_length=20)
+    engine_size: Decimal | None = Field(None, ge=0)
+    plate_number: str | None = Field(None, max_length=20)
+    applicant: str | None = Field(None, max_length=100)
+    owner: str | None = Field(None, max_length=100)
+    appraisal_value_usd: Decimal | None = Field(None, ge=0)
+    appraisal_value_trochez: Decimal | None = Field(None, ge=0)
+    vin: str | None = Field(None, max_length=20)
+    engine_number: str | None = Field(None, max_length=20)
     notes: str | None = None
-    validity_days: int = Field(..., ge=0)
-    validity_kms: int = Field(..., ge=0)
+    validity_days: int | None = Field(None, ge=0)
+    validity_kms: int | None = Field(None, ge=0)
     apprasail_value_lower_cost: Decimal | None = Field(default=None, ge=0)
     apprasail_value_bank: Decimal | None = Field(default=None, ge=0)
     apprasail_value_lower_bank: Decimal | None = Field(default=None, ge=0)
     extras: str | None = None
     vin_card: str | None = Field(default=None, max_length=20)
     engine_number_card: str | None = Field(default=None, max_length=20)
+
+    @field_validator('engine_size', 'appraisal_value_usd', 'appraisal_value_trochez', 
+                    'apprasail_value_lower_cost', 'apprasail_value_bank', 'apprasail_value_lower_bank', mode='before')
+    @classmethod
+    def validate_decimal_fields(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                v = Decimal(v)
+            except (InvalidOperation, ValueError):
+                return None
+        if isinstance(v, Decimal):
+            # Check if it's NaN or infinite
+            if v.is_nan() or v.is_infinite():
+                return None
+        return v
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
