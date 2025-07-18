@@ -5,7 +5,23 @@ from pydantic import BaseModel, Field, field_validator
 
 class AppraisalDeductionsBase(BaseModel):
     description: str
-    amount: Decimal = Field(..., ge=0, decimal_places=2)
+    amount: Decimal | None = Field(None, ge=0)
+
+    @field_validator('amount', mode='before')
+    @classmethod
+    def validate_amount(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                v = Decimal(v)
+            except (InvalidOperation, ValueError):
+                return None
+        if isinstance(v, Decimal):
+            # Check if it's NaN or infinite
+            if v.is_nan() or v.is_infinite():
+                return None
+        return v
 
 class AppraisalDeductionsCreate(AppraisalDeductionsBase):
     pass
@@ -42,9 +58,15 @@ class VehicleAppraisalBase(BaseModel):
     extras: str | None = None
     vin_card: str | None = Field(default=None, max_length=20)
     engine_number_card: str | None = Field(default=None, max_length=20)
+    modified_km: int | None = Field(default=None, ge=0)
+    extra_value: Decimal | None = Field(default=None, ge=0)
+    discounts: Decimal | None = Field(default=None, ge=0)
+    bank_value_in_dollars: Decimal | None = Field(default=None, ge=0)
+    referencia_original: str | None = Field(default=None, max_length=100)
 
     @field_validator('engine_size', 'appraisal_value_usd', 'appraisal_value_trochez', 
-                    'apprasail_value_lower_cost', 'apprasail_value_bank', 'apprasail_value_lower_bank', mode='before')
+                    'apprasail_value_lower_cost', 'apprasail_value_bank', 'apprasail_value_lower_bank',
+                    'extra_value', 'discounts', 'bank_value_in_dollars', mode='before')
     @classmethod
     def validate_decimal_fields(cls, v):
         if v is None:
@@ -58,6 +80,16 @@ class VehicleAppraisalBase(BaseModel):
             # Check if it's NaN or infinite
             if v.is_nan() or v.is_infinite():
                 return None
+        return v
+
+    @field_validator('referencia_original', mode='before')
+    @classmethod
+    def validate_referencia_original(cls, v):
+        if v is None:
+            return None
+        # Convert numeric values to string
+        if isinstance(v, (int, float, Decimal)):
+            return str(int(v)) if isinstance(v, (int, float)) else str(v)
         return v
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):

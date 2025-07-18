@@ -47,8 +47,8 @@ def init_db():
     # Import all models here to ensure they are registered with the Base metadata
     from app.security.models.users import User
     from app.security.models.user_types import UserType
-    # Uncomment if these models exist
-    # from app.appraisals.models.appraisals import VehicleAppraisal, AppraisalDeductions
+    # Import appraisal models
+    from app.appraisals.models.appraisals import VehicleAppraisal, AppraisalDeductions
     
     # Create all tables
     Base.metadata.create_all(bind=engine)

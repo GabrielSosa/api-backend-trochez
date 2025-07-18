@@ -46,7 +46,12 @@ async def create_vehicle_appraisal(
         apprasail_value_lower_bank=appraisal.apprasail_value_lower_bank,
         extras=appraisal.extras,
         vin_card=appraisal.vin_card,
-        engine_number_card=appraisal.engine_number_card
+        engine_number_card=appraisal.engine_number_card,
+        modified_km=appraisal.modified_km,
+        extra_value=appraisal.extra_value,
+        discounts=appraisal.discounts,
+        bank_value_in_dollars=appraisal.bank_value_in_dollars,
+        referencia_original=appraisal.referencia_original
     )
     db.add(db_appraisal)
     db.flush()  # Para obtener el ID generado
