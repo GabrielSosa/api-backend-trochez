@@ -40,6 +40,7 @@ class VehicleAppraisal(Base):
     discounts = Column(Numeric(18, 2), nullable=True)
     bank_value_in_dollars = Column(Numeric(18, 2), nullable=True)
     referencia_original = Column(String(100), nullable=True)
+    cert = Column(String(100), nullable=True)
 
     # Relación con AppraisalDeductions
     deductions = relationship("AppraisalDeductions", back_populates="vehicle_appraisal", cascade="all, delete-orphan")

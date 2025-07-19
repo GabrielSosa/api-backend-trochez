@@ -63,6 +63,7 @@ class VehicleAppraisalBase(BaseModel):
     discounts: Decimal | None = Field(default=None, ge=0)
     bank_value_in_dollars: Decimal | None = Field(default=None, ge=0)
     referencia_original: str | None = Field(default=None, max_length=100)
+    cert: str | None = Field(default=None, max_length=100)
 
     @field_validator('engine_size', 'appraisal_value_usd', 'appraisal_value_trochez', 
                     'apprasail_value_lower_cost', 'apprasail_value_bank', 'apprasail_value_lower_bank',
@@ -91,6 +92,13 @@ class VehicleAppraisalBase(BaseModel):
         if isinstance(v, (int, float, Decimal)):
             return str(int(v)) if isinstance(v, (int, float)) else str(v)
         return v
+
+    @field_validator('cert', mode='before')
+    @classmethod
+    def validate_cert(cls, v):
+        if v is None:
+            return ""
+        return str(v)
 
 class VehicleAppraisalCreate(VehicleAppraisalBase):
     deductions: List[AppraisalDeductionsCreate]
