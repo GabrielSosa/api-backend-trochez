@@ -8,6 +8,7 @@ from app.certs.certificate_routes import router as certificate_router
 
 # Importar los routers
 from app.security.routers import user_types_router, users_router, signin_router
+from app.dashboard.routers.dashboard import router as dashboard_router
 from app.appraisals import appraisals_router
 from fastapi.staticfiles import StaticFiles
 import os
@@ -33,7 +34,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(users_router, prefix=f"{settings.API_V1_STR}/security/users", tags=["users"])
 app.include_router(signin_router, prefix=f"{settings.API_V1_STR}/security", tags=["authentication"])
 app.include_router(appraisals_router, prefix=f"{settings.API_V1_STR}/appraisals", tags=["appraisals"])
-
+app.include_router(dashboard_router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["dashboard"])
 # Include the certificate routes
 app.include_router(certificate_router)
 
