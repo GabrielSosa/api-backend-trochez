@@ -77,11 +77,14 @@ class CertificateService:
             formatted_date = datetime.now().strftime("%d %b %Y")
         
         # Calculate total deductions amount
-        total_deductions = sum(deduction.amount for deduction in deductions)
+        total_deductions = sum(deduction.amount or 0 for deduction in deductions)
         
-        # Format currency values
+        # Format currency values with null handling
         formatted_total_deductions = f"₡{total_deductions:,}".replace(",", " ")
-        formatted_appraisal_value = f"${vehicle_appraisal.appraisal_value_usd:,}".replace(",", " ")
+        
+        # Handle null appraisal values
+        appraisal_value_usd = vehicle_appraisal.appraisal_value_usd or 0
+        formatted_appraisal_value = f"${appraisal_value_usd:,}".replace(",", " ")
         
         if vehicle_appraisal.apprasail_value_lower_bank is not None:
             appraisal_value_crc_raw = vehicle_appraisal.apprasail_value_lower_bank
@@ -94,13 +97,66 @@ class CertificateService:
             appraisal_value_words_crc = ""
         
         # Convert appraisal value to words - convert Decimal to int
-        appraisal_value_int = int(vehicle_appraisal.appraisal_value_usd)
+        appraisal_value_int = int(appraisal_value_usd)
         appraisal_value_words = self.number_to_words(appraisal_value_int)
+        
+        # Helper function to handle null values
+        def safe_str(value):
+            """Convert any value to string, handling None values"""
+            if value is None:
+                return ""
+            return str(value)
+        
+        # Create safe deductions with null handling
+        safe_deductions = []
+        for deduction in deductions:
+            safe_deduction = type('SafeDeduction', (), {
+                'appraisal_deductions_id': deduction.appraisal_deductions_id,
+                'vehicle_appraisal_id': deduction.vehicle_appraisal_id,
+                'description': safe_str(deduction.description),
+                'amount': deduction.amount or 0
+            })()
+            safe_deductions.append(safe_deduction)
+        
+        # Create a safe appraisal object with null handling
+        safe_appraisal = type('SafeAppraisal', (), {
+            'vehicle_appraisal_id': vehicle_appraisal.vehicle_appraisal_id,
+            'appraisal_date': vehicle_appraisal.appraisal_date,
+            'vehicle_description': safe_str(vehicle_appraisal.vehicle_description),
+            'brand': safe_str(vehicle_appraisal.brand),
+            'model_year': vehicle_appraisal.model_year,
+            'color': safe_str(vehicle_appraisal.color),
+            'mileage': vehicle_appraisal.mileage,
+            'fuel_type': safe_str(vehicle_appraisal.fuel_type),
+            'engine_size': vehicle_appraisal.engine_size,
+            'plate_number': safe_str(vehicle_appraisal.plate_number),
+            'applicant': safe_str(vehicle_appraisal.applicant),
+            'owner': safe_str(vehicle_appraisal.owner),
+            'appraisal_value_usd': vehicle_appraisal.appraisal_value_usd,
+            'appraisal_value_trochez': vehicle_appraisal.appraisal_value_trochez,
+            'vin': safe_str(vehicle_appraisal.vin),
+            'engine_number': safe_str(vehicle_appraisal.engine_number),
+            'notes': safe_str(vehicle_appraisal.notes),
+            'validity_days': vehicle_appraisal.validity_days,
+            'validity_kms': vehicle_appraisal.validity_kms,
+            'apprasail_value_lower_cost': vehicle_appraisal.apprasail_value_lower_cost,
+            'apprasail_value_bank': vehicle_appraisal.apprasail_value_bank,
+            'apprasail_value_lower_bank': vehicle_appraisal.apprasail_value_lower_bank,
+            'extras': safe_str(vehicle_appraisal.extras),
+            'vin_card': safe_str(vehicle_appraisal.vin_card),
+            'engine_number_card': safe_str(vehicle_appraisal.engine_number_card),
+            'modified_km': vehicle_appraisal.modified_km,
+            'extra_value': vehicle_appraisal.extra_value,
+            'discounts': vehicle_appraisal.discounts,
+            'bank_value_in_dollars': vehicle_appraisal.bank_value_in_dollars,
+            'referencia_original': safe_str(vehicle_appraisal.referencia_original),
+            'cert': safe_str(vehicle_appraisal.cert)
+        })()
         
         # Prepare template data
         template_data = {
-            "appraisal": vehicle_appraisal,
-            "deductions": deductions,
+            "appraisal": safe_appraisal,
+            "deductions": safe_deductions,
             "formatted_date": formatted_date,
             "total_deductions": formatted_total_deductions,
             "appraisal_value": formatted_appraisal_value,
