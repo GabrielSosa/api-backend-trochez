@@ -35,9 +35,9 @@ def dashboard_summary(
         total_avaluos_variation = "0%"
 
     # Ingresos totales (suma appraisal_value_usd)
-    total_ingresos = db.query(func.coalesce(func.sum(VehicleAppraisal.appraisal_value_usd), 0))\
+    total_ingresos = db.query(func.coalesce(func.sum(VehicleAppraisal.appraisal_value_trochez), 0))\
         .filter(VehicleAppraisal.appraisal_date >= first_day_month).scalar() or 0
-    total_ingresos_last = db.query(func.coalesce(func.sum(VehicleAppraisal.appraisal_value_usd), 0))\
+    total_ingresos_last = db.query(func.coalesce(func.sum(VehicleAppraisal.appraisal_value_trochez), 0))\
         .filter(VehicleAppraisal.appraisal_date >= first_day_last_month)\
         .filter(VehicleAppraisal.appraisal_date <= last_day_last_month).scalar() or 0
     if total_ingresos_last:
