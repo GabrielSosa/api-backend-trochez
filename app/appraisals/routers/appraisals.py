@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
 from app.database import get_db
 from app.security.utils import get_current_user
 from app.security.models.users import User
@@ -18,35 +18,21 @@ async def create_vehicle_appraisal(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Crear un nuevo avalúo de vehículo con sus deducciones.
+    Crear un nuevo avalúo de vehículo.
     Requiere autenticación JWT.
     """
-    # Crear primero el avalúo del vehículo
+    # Create the main appraisal
     db_appraisal = VehicleAppraisal(
-        appraisal_date=appraisal.appraisal_date,
-        vehicle_description=appraisal.vehicle_description,
-        brand=appraisal.brand,
-        model_year=appraisal.model_year,
-        color=appraisal.color,
-        mileage=appraisal.mileage,
-        fuel_type=appraisal.fuel_type,
-        engine_size=appraisal.engine_size,
         plate_number=appraisal.plate_number,
+        vin=appraisal.vin,
         applicant=appraisal.applicant,
         owner=appraisal.owner,
-        appraisal_value_usd=appraisal.appraisal_value_usd,
-        appraisal_value_trochez=appraisal.appraisal_value_trochez,
-        vin=appraisal.vin,
+        color=appraisal.color,
         engine_number=appraisal.engine_number,
-        notes=appraisal.notes,
-        validity_days=appraisal.validity_days,
-        validity_kms=appraisal.validity_kms,
-        apprasail_value_lower_cost=appraisal.apprasail_value_lower_cost,
-        apprasail_value_bank=appraisal.apprasail_value_bank,
-        apprasail_value_lower_bank=appraisal.apprasail_value_lower_bank,
-        extras=appraisal.extras,
-        vin_card=appraisal.vin_card,
-        engine_number_card=appraisal.engine_number_card,
+        vehicle_description=appraisal.vehicle_description,
+        model_year=appraisal.model_year,
+        appraisal_date=appraisal.appraisal_date,
+        appraisal_value=appraisal.appraisal_value,
         modified_km=appraisal.modified_km,
         extra_value=appraisal.extra_value,
         discounts=appraisal.discounts,
@@ -55,36 +41,201 @@ async def create_vehicle_appraisal(
         cert=appraisal.cert
     )
     db.add(db_appraisal)
-    db.flush()  # Para obtener el ID generado
+    db.flush()  # Get the ID without committing
 
-    # Crear las deducciones
-    for deduction in appraisal.deductions:
-        db_deduction = AppraisalDeductions(
+    # Create deductions
+    for deduction_data in appraisal.deductions:
+        deduction = AppraisalDeductions(
             vehicle_appraisal_id=db_appraisal.vehicle_appraisal_id,
-            description=deduction.description,
-            amount=deduction.amount
+            description=deduction_data.description,
+            amount=deduction_data.amount
         )
-        db.add(db_deduction)
-    
+        db.add(deduction)
+
     db.commit()
     db.refresh(db_appraisal)
     return db_appraisal
 
-# --- READ ALL Endpoint ---
-@router.get("/", response_model=List[VehicleAppraisalSchema])
-async def read_vehicle_appraisals(
-    skip: int = 0,
-    limit: int = 100,
+# --- SEARCH Endpoint ---
+@router.get("/search")
+async def search_vehicle_appraisals(
+    query: str = Query("", description="Término de búsqueda"),
+    page: int = Query(1, ge=1, description="Número de página"),
+    limit: int = Query(10, ge=1, le=100, description="Elementos por página"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Obtener lista de avalúos de vehículos.
+    Buscar avalúos por múltiples criterios.
+    Busca en: placa, VIN, cliente, propietario, color, certificado, motor, modelo, año.
     Requiere autenticación JWT.
     """
-    # Use joinedload to efficiently load deductions along with appraisals
-    appraisals = db.query(VehicleAppraisal).options(joinedload(VehicleAppraisal.deductions)).offset(skip).limit(limit).all()
-    return appraisals
+    from sqlalchemy import or_, cast, String, text
+    
+    # Si no hay término de búsqueda, devolver todos los registros
+    if not query or query.strip() == "":
+        return {
+            "data": [],
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_count": 0,
+                "total_pages": 0,
+                "has_next": False,
+                "has_prev": False
+            },
+            "message": "Debe proporcionar un término de búsqueda",
+            "search_query": ""
+        }
+    
+    # Construir la consulta base
+    base_query = db.query(VehicleAppraisal).options(
+        joinedload(VehicleAppraisal.deductions)
+    )
+    
+    # Aplicar filtros de búsqueda con conversiones seguras
+    search_query = base_query.filter(
+        or_(
+            VehicleAppraisal.plate_number.ilike(f"%{query}%"),
+            VehicleAppraisal.vin.ilike(f"%{query}%"),
+            VehicleAppraisal.applicant.ilike(f"%{query}%"),
+            VehicleAppraisal.owner.ilike(f"%{query}%"),
+            VehicleAppraisal.color.ilike(f"%{query}%"),
+            # Convertir cert a string de forma segura
+            cast(VehicleAppraisal.cert, String).ilike(f"%{query}%"),
+            VehicleAppraisal.engine_number.ilike(f"%{query}%"),
+            VehicleAppraisal.vehicle_description.ilike(f"%{query}%"),
+            # Convertir model_year a string de forma segura
+            cast(VehicleAppraisal.model_year, String).ilike(f"%{query}%")
+        )
+    )
+    
+    # Obtener el total de registros que coinciden con la búsqueda
+    total_count = search_query.count()
+    
+    # Si no hay resultados, devolver respuesta vacía
+    if total_count == 0:
+        return {
+            "data": [],
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_count": 0,
+                "total_pages": 0,
+                "has_next": False,
+                "has_prev": False
+            },
+            "message": f"No se encontraron avalúos para: '{query}'"
+        }
+    
+    # Calcular paginación
+    total_pages = (total_count + limit - 1) // limit
+    offset = (page - 1) * limit
+    
+    # Validar si la página solicitada existe
+    if page > total_pages:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Página {page} no existe. Solo hay {total_pages} páginas disponibles para la búsqueda."
+        )
+    
+    # Obtener los resultados paginados
+    results = search_query.offset(offset).limit(limit).all()
+    
+    # Determinar mensaje según el estado
+    has_next = page < total_pages
+    has_prev = page > 1
+    
+    if page == total_pages:
+        message = f"Última página de resultados para: '{query}'"
+    elif page == 1:
+        message = f"Primera página de resultados para: '{query}'"
+    else:
+        message = f"Página {page} de {total_pages} para: '{query}'"
+    
+    return {
+        "data": results,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "has_next": has_next,
+            "has_prev": has_prev
+        },
+        "message": message,
+        "search_query": query
+    }
+
+# --- READ ALL Endpoint ---
+@router.get("/")
+async def read_vehicle_appraisals(
+    page: int = Query(1, ge=1, description="Número de página"),
+    limit: int = Query(10, ge=1, le=100, description="Elementos por página"),
+    offset: int = Query(0, ge=0, description="Desplazamiento desde el inicio"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Obtener todos los avalúos de vehículos con paginación.
+    Requiere autenticación JWT.
+    """
+    # Get total count
+    total_count = db.query(VehicleAppraisal).count()
+    
+    # If no data exists, return empty response
+    if total_count == 0:
+        return {
+            "data": [],
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_count": 0,
+                "total_pages": 0,
+                "has_next": False,
+                "has_prev": False
+            },
+            "message": "No hay avalúos registrados en el sistema."
+        }
+    
+    # Calculate pagination
+    total_pages = (total_count + limit - 1) // limit
+    
+    # Validate if requested page exists
+    if page > total_pages:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Página {page} no existe. Solo hay {total_pages} páginas disponibles."
+        )
+    
+    # Get paginated results
+    appraisals = db.query(VehicleAppraisal).options(
+        joinedload(VehicleAppraisal.deductions)
+    ).offset(offset).limit(limit).all()
+    
+    # Determine message based on state
+    has_next = page < total_pages
+    has_prev = page > 1
+    
+    if page == total_pages:
+        message = "Última página de avalúos"
+    elif page == 1:
+        message = "Primera página de avalúos"
+    else:
+        message = f"Página {page} de {total_pages}"
+    
+    return {
+        "data": appraisals,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "has_next": has_next,
+            "has_prev": has_prev
+        },
+        "message": message
+    }
 
 # --- READ ONE Endpoint ---
 @router.get("/{vehicle_appraisal_id}", response_model=VehicleAppraisalSchema)
@@ -94,21 +245,22 @@ async def read_vehicle_appraisal(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Obtener un avalúo específico por ID.
+    Obtener un avalúo de vehículo específico por ID.
     Requiere autenticación JWT.
     """
-    # Use joinedload here as well
-    appraisal = db.query(VehicleAppraisal).options(joinedload(VehicleAppraisal.deductions)).filter(
-        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id
-    ).first()
-    if not appraisal:
+    appraisal = db.query(VehicleAppraisal).options(
+        joinedload(VehicleAppraisal.deductions)
+    ).filter(VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id).first()
+    
+    if appraisal is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Avalúo no encontrado"
         )
+    
     return appraisal
 
-# --- UPDATE Endpoint (New) ---
+# --- UPDATE Endpoint ---
 @router.put("/{vehicle_appraisal_id}", response_model=VehicleAppraisalSchema)
 async def update_vehicle_appraisal(
     vehicle_appraisal_id: int,
@@ -117,24 +269,19 @@ async def update_vehicle_appraisal(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Actualizar un avalúo de vehículo existente por ID.
-    Reemplaza todos los campos y las deducciones.
+    Actualizar un avalúo de vehículo existente.
     Requiere autenticación JWT.
     """
-    # Find the existing appraisal, load deductions eagerly
-    db_appraisal = db.query(VehicleAppraisal).options(
-        joinedload(VehicleAppraisal.deductions)
-    ).filter(
+    db_appraisal = db.query(VehicleAppraisal).filter(
         VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id
     ).first()
-
-    if not db_appraisal:
+    
+    if db_appraisal is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Avalúo no encontrado"
         )
-
-    # Update the main appraisal fields
+    
     # This part implicitly handles the renamed and new fields
     # as long as VehicleAppraisalUpdate schema is correct.
     update_data = appraisal_update.model_dump(exclude_unset=True, exclude={'deductions'})
