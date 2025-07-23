@@ -172,7 +172,6 @@ async def search_vehicle_appraisals(
 async def read_vehicle_appraisals(
     page: int = Query(1, ge=1, description="Número de página"),
     limit: int = Query(10, ge=1, le=100, description="Elementos por página"),
-    offset: int = Query(0, ge=0, description="Desplazamiento desde el inicio"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -207,6 +206,9 @@ async def read_vehicle_appraisals(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Página {page} no existe. Solo hay {total_pages} páginas disponibles."
         )
+    
+    # Calculate offset based on page
+    offset = (page - 1) * limit
     
     # Get paginated results
     appraisals = db.query(VehicleAppraisal).options(
