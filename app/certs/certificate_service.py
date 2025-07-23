@@ -82,10 +82,29 @@ class CertificateService:
         # Format currency values with null handling
         formatted_total_deductions = f"₡{total_deductions:,}".replace(",", " ")
         
-        # Handle null appraisal values
+        # Handle null appraisal values and bank values
         appraisal_value_usd = vehicle_appraisal.appraisal_value_usd or 0
-        formatted_appraisal_value = f"${appraisal_value_usd:,}".replace(",", " ")
+        bank_value_in_dollars = vehicle_appraisal.bank_value_in_dollars or 0
         
+        # Format appraisal value (VALOR SUGERIDO PARA ENTREGA EN DISTRIBUIDORA)
+        if appraisal_value_usd > 0:
+            formatted_appraisal_value = f"${appraisal_value_usd:,}".replace(",", " ")
+            appraisal_value_int = int(appraisal_value_usd)
+            appraisal_value_words = self.number_to_words(appraisal_value_int)
+        else:
+            formatted_appraisal_value = ""
+            appraisal_value_words = ""
+        
+        # Format bank value (VALOR MAXIMO DE GARANTIA BANCARIA)
+        if bank_value_in_dollars > 0:
+            formatted_bank_value = f"${bank_value_in_dollars:,}".replace(",", " ")
+            bank_value_int = int(bank_value_in_dollars)
+            bank_value_words = self.number_to_words(bank_value_int)
+        else:
+            formatted_bank_value = ""
+            bank_value_words = ""
+        
+        # Handle CRC values (apprasail_value_lower_bank)
         if vehicle_appraisal.apprasail_value_lower_bank is not None:
             appraisal_value_crc_raw = vehicle_appraisal.apprasail_value_lower_bank
             formatted_appraisal_value_crc = f"₡{appraisal_value_crc_raw:,}".replace(",", " ")
@@ -95,10 +114,6 @@ class CertificateService:
             appraisal_value_crc_raw = 0
             formatted_appraisal_value_crc = ""
             appraisal_value_words_crc = ""
-        
-        # Convert appraisal value to words - convert Decimal to int
-        appraisal_value_int = int(appraisal_value_usd)
-        appraisal_value_words = self.number_to_words(appraisal_value_int)
         
         # Helper function to handle null values
         def safe_str(value):
@@ -161,6 +176,8 @@ class CertificateService:
             "total_deductions": formatted_total_deductions,
             "appraisal_value": formatted_appraisal_value,
             "appraisal_value_words": appraisal_value_words,
+            "bank_value": formatted_bank_value,
+            "bank_value_words": bank_value_words,
             "appraisal_value_crc_raw": appraisal_value_crc_raw,
             "appraisal_value_crc": formatted_appraisal_value_crc,
             "appraisal_value_words_crc": appraisal_value_words_crc

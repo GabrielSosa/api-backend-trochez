@@ -236,8 +236,9 @@
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
-                    <td style="background-color: white; padding: 5px 10px; width: 30%;">
-                        <div>{{ appraisal.brand }} {{ appraisal.vehicle_description }}</div>
+                    <td style="font-size: 14px; background-color: white; padding: 5px 10px; width: 30%;">
+                        <div>{{ appraisal.brand }}</div>
+                        <div style="font-size: 12px; line-height: 1.2; margin-top: 2px;">{{ appraisal.vehicle_description }}</div>
                     </td>
                     <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
                         <table style="width: 100%;">
@@ -300,16 +301,18 @@
                 <tr>
                     <td style="text-align: center; vertical-align: middle; height: 80px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                            {% if appraisal_value_crc_raw and appraisal_value_crc_raw > 0 %}
-                                <div class="total-amount">{{ appraisal_value_crc }}</div>
-                                <div class="amount-text">{{ appraisal_value_words_crc }} COLONES</div>
+                            {% if bank_value %}
+                                <div class="total-amount">{{ bank_value }}</div>
+                                <div class="amount-text">{{ bank_value_words }} DÓLARES</div>
                             {% endif %}
                         </div>
                     </td>
                     <td style="text-align: center; vertical-align: middle; height: 80px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                            <div class="total-amount">{{ appraisal_value }}</div>
-                            <div class="amount-text">{{ appraisal_value_words }} DÓLARES</div>
+                            {% if appraisal_value %}
+                                <div class="total-amount">{{ appraisal_value }}</div>
+                                <div class="amount-text">{{ appraisal_value_words }} DÓLARES</div>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -365,10 +368,10 @@
                 </tr>
                 <tr>
                     <td style="padding: 4px 12px;">
-                        <span>{{ appraisal.vin }}</span>
+                        <span>{{ appraisal.vin_card }}</span>
                     </td>
                     <td style="padding: 4px 12px;">
-                        <span>{{ appraisal.engine_number }}</span>
+                        <span>{{ appraisal.engine_number_card }}</span>
                     </td>
                 </tr>
             </table>
