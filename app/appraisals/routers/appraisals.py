@@ -38,7 +38,8 @@ async def create_vehicle_appraisal(
         discounts=appraisal.discounts,
         bank_value_in_dollars=appraisal.bank_value_in_dollars,
         referencia_original=appraisal.referencia_original,
-        cert=appraisal.cert
+        cert=appraisal.cert,
+        is_deleted=False  # Por defecto en False
     )
     db.add(db_appraisal)
     db.flush()  # Get the ID without committing
@@ -70,7 +71,7 @@ async def search_vehicle_appraisals(
     Busca en: placa, VIN, cliente, propietario, color, certificado, motor, modelo, año.
     Requiere autenticación JWT.
     """
-    from sqlalchemy import or_, cast, String, text
+    from sqlalchemy import or_, cast, String, text, desc, nulls_last
     
     # Si no hay término de búsqueda, devolver todos los registros
     if not query or query.strip() == "":
@@ -88,8 +89,10 @@ async def search_vehicle_appraisals(
             "search_query": ""
         }
     
-    # Construir la consulta base
-    base_query = db.query(VehicleAppraisal).options(
+    # Construir la consulta base con filtro de is_deleted=False
+    base_query = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.is_deleted == False
+    ).options(
         joinedload(VehicleAppraisal.deductions)
     )
     
@@ -139,8 +142,10 @@ async def search_vehicle_appraisals(
             detail=f"Página {page} no existe. Solo hay {total_pages} páginas disponibles para la búsqueda."
         )
     
-    # Obtener los resultados paginados
-    results = search_query.offset(offset).limit(limit).all()
+    # Obtener los resultados paginados ordenados por fecha (más recientes primero, sin fecha al final)
+    results = search_query.order_by(
+        nulls_last(desc(VehicleAppraisal.appraisal_date))
+    ).offset(offset).limit(limit).all()
     
     # Determinar mensaje según el estado
     has_next = page < total_pages
@@ -179,8 +184,12 @@ async def read_vehicle_appraisals(
     Obtener todos los avalúos de vehículos con paginación.
     Requiere autenticación JWT.
     """
-    # Get total count
-    total_count = db.query(VehicleAppraisal).count()
+    from sqlalchemy import desc, nulls_last
+    
+    # Get total count with is_deleted=False filter
+    total_count = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.is_deleted == False
+    ).count()
     
     # If no data exists, return empty response
     if total_count == 0:
@@ -210,9 +219,13 @@ async def read_vehicle_appraisals(
     # Calculate offset based on page
     offset = (page - 1) * limit
     
-    # Get paginated results
-    appraisals = db.query(VehicleAppraisal).options(
+    # Get paginated results with is_deleted=False filter and ordered by date
+    appraisals = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.is_deleted == False
+    ).options(
         joinedload(VehicleAppraisal.deductions)
+    ).order_by(
+        nulls_last(desc(VehicleAppraisal.appraisal_date))
     ).offset(offset).limit(limit).all()
     
     # Determine message based on state
@@ -250,9 +263,12 @@ async def read_vehicle_appraisal(
     Obtener un avalúo de vehículo específico por ID.
     Requiere autenticación JWT.
     """
-    appraisal = db.query(VehicleAppraisal).options(
+    appraisal = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id,
+        VehicleAppraisal.is_deleted == False
+    ).options(
         joinedload(VehicleAppraisal.deductions)
-    ).filter(VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id).first()
+    ).first()
     
     if appraisal is None:
         raise HTTPException(
@@ -275,7 +291,8 @@ async def update_vehicle_appraisal(
     Requiere autenticación JWT.
     """
     db_appraisal = db.query(VehicleAppraisal).filter(
-        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id
+        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id,
+        VehicleAppraisal.is_deleted == False
     ).first()
     
     if db_appraisal is None:
@@ -310,12 +327,114 @@ async def update_vehicle_appraisal(
     db.refresh(db_appraisal) # Refresh to get updated state including new deductions
     return db_appraisal
 
-# --- DELETE Endpoint (Placeholder - Add if needed) ---
-# @router.delete("/{vehicle_appraisal_id}", status_code=status.HTTP_204_NO_CONTENT)
-# async def delete_vehicle_appraisal(
-#     vehicle_appraisal_id: int,
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(get_current_user)
-# ):
-#     # ... implementation for delete ...
-#     pass
+# --- DELETE Endpoint (Soft Delete) ---
+@router.delete("/{vehicle_appraisal_id}", status_code=status.HTTP_200_OK)
+async def delete_vehicle_appraisal(
+    vehicle_appraisal_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Eliminar un avalúo de vehículo (soft delete).
+    Marca el registro como eliminado (is_deleted=True) sin borrarlo físicamente.
+    Requiere autenticación JWT.
+    """
+    db_appraisal = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id,
+        VehicleAppraisal.is_deleted == False
+    ).first()
+    
+    if db_appraisal is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Avalúo no encontrado o ya eliminado"
+        )
+    
+    # Soft delete: marcar como eliminado
+    db_appraisal.is_deleted = True
+    
+    db.commit()
+    
+    return {
+        "message": "Avalúo eliminado exitosamente",
+        "vehicle_appraisal_id": vehicle_appraisal_id
+    }
+
+# --- DUPLICATE Endpoint ---
+@router.post("/{vehicle_appraisal_id}/duplicate", response_model=VehicleAppraisalSchema)
+async def duplicate_vehicle_appraisal(
+    vehicle_appraisal_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Duplicar un avalúo de vehículo y sus deducciones.
+    Crea una copia exacta del avalúo original con is_deleted=False y fecha actual.
+    Requiere autenticación JWT.
+    """
+    from datetime import date
+    
+    # Buscar el avalúo original
+    original_appraisal = db.query(VehicleAppraisal).filter(
+        VehicleAppraisal.vehicle_appraisal_id == vehicle_appraisal_id,
+        VehicleAppraisal.is_deleted == False
+    ).first()
+    
+    if original_appraisal is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Avalúo no encontrado o ya eliminado"
+        )
+    
+    # Crear una copia del avalúo con fecha actual
+    duplicated_appraisal = VehicleAppraisal(
+        appraisal_date=date.today(),  # Fecha actual
+        vehicle_description=original_appraisal.vehicle_description,
+        brand=original_appraisal.brand,
+        model_year=original_appraisal.model_year,
+        color=original_appraisal.color,
+        mileage=original_appraisal.mileage,
+        fuel_type=original_appraisal.fuel_type,
+        engine_size=original_appraisal.engine_size,
+        plate_number=original_appraisal.plate_number,
+        applicant=original_appraisal.applicant,
+        owner=original_appraisal.owner,
+        appraisal_value_usd=original_appraisal.appraisal_value_usd,
+        appraisal_value_trochez=original_appraisal.appraisal_value_trochez,
+        apprasail_value_lower_cost=original_appraisal.apprasail_value_lower_cost,
+        apprasail_value_bank=original_appraisal.apprasail_value_bank,
+        apprasail_value_lower_bank=original_appraisal.apprasail_value_lower_bank,
+        vin=original_appraisal.vin,
+        engine_number=original_appraisal.engine_number,
+        notes=original_appraisal.notes,
+        validity_days=original_appraisal.validity_days,
+        validity_kms=original_appraisal.validity_kms,
+        extras=original_appraisal.extras,
+        vin_card=original_appraisal.vin_card,
+        engine_number_card=original_appraisal.engine_number_card,
+        modified_km=original_appraisal.modified_km,
+        extra_value=original_appraisal.extra_value,
+        discounts=original_appraisal.discounts,
+        bank_value_in_dollars=original_appraisal.bank_value_in_dollars,
+        referencia_original=original_appraisal.referencia_original,
+        cert=original_appraisal.cert,
+        is_deleted=False  # Asegurar que la copia no esté eliminada
+    )
+    
+    db.add(duplicated_appraisal)
+    db.flush()  # Obtener el ID del nuevo avalúo sin hacer commit
+    
+    # Duplicar las deducciones
+    for original_deduction in original_appraisal.deductions:
+        duplicated_deduction = AppraisalDeductions(
+            vehicle_appraisal_id=duplicated_appraisal.vehicle_appraisal_id,
+            description=original_deduction.description,
+            amount=original_deduction.amount
+        )
+        db.add(duplicated_deduction)
+    
+    db.commit()
+    db.refresh(duplicated_appraisal)
+    
+    # Devolver solo el avalúo duplicado para que coincida con el schema
+    return duplicated_appraisal

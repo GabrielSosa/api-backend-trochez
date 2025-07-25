@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Text, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Text, Numeric, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 from typing import ClassVar, Dict, Any
@@ -41,6 +41,7 @@ class VehicleAppraisal(Base):
     bank_value_in_dollars = Column(Numeric(18, 2), nullable=True)
     referencia_original = Column(String(100), nullable=True)
     cert = Column(String(100), nullable=True)
+    is_deleted = Column(Boolean, default=False, nullable=False)
 
     # Relación con AppraisalDeductions
     deductions = relationship("AppraisalDeductions", back_populates="vehicle_appraisal", cascade="all, delete-orphan")
