@@ -21,24 +21,66 @@ async def create_vehicle_appraisal(
     Crear un nuevo avalúo de vehículo.
     Requiere autenticación JWT.
     """
-    # Create the main appraisal
+    from decimal import Decimal
+    
+    # Force clean all data before creating the SQLAlchemy model
+    def force_clean_value(value, field_type='string'):
+        """Ensure all values are properly cleaned"""
+        if value is None:
+            if field_type == 'decimal_required':
+                return Decimal('0')
+            elif field_type == 'int_required':
+                return 0
+            else:
+                return None
+        
+        if isinstance(value, str) and value.strip() == "":
+            if field_type == 'decimal_required':
+                return Decimal('0')
+            elif field_type == 'decimal_optional':
+                return None
+            elif field_type == 'int_required':
+                return 0
+            elif field_type == 'int_optional':
+                return None
+            else:
+                return value
+        
+        return value
+    
+    # Create the main appraisal with forced clean values
     db_appraisal = VehicleAppraisal(
-        plate_number=appraisal.plate_number,
-        vin=appraisal.vin,
-        applicant=appraisal.applicant,
-        owner=appraisal.owner,
-        color=appraisal.color,
-        engine_number=appraisal.engine_number,
-        vehicle_description=appraisal.vehicle_description,
-        model_year=appraisal.model_year,
+        plate_number=force_clean_value(appraisal.plate_number),
+        vin=force_clean_value(appraisal.vin),
+        applicant=force_clean_value(appraisal.applicant),
+        owner=force_clean_value(appraisal.owner),
+        color=force_clean_value(appraisal.color),
+        engine_number=force_clean_value(appraisal.engine_number),
+        vehicle_description=force_clean_value(appraisal.vehicle_description),
+        model_year=force_clean_value(appraisal.model_year, 'int_required'),
         appraisal_date=appraisal.appraisal_date,
-        appraisal_value=appraisal.appraisal_value,
-        modified_km=appraisal.modified_km,
-        extra_value=appraisal.extra_value,
-        discounts=appraisal.discounts,
-        bank_value_in_dollars=appraisal.bank_value_in_dollars,
-        referencia_original=appraisal.referencia_original,
-        cert=appraisal.cert,
+        brand=force_clean_value(appraisal.brand),
+        mileage=force_clean_value(appraisal.mileage, 'int_required'),
+        fuel_type=force_clean_value(appraisal.fuel_type),
+        engine_size=force_clean_value(appraisal.engine_size, 'decimal_required'),
+        appraisal_value_usd=force_clean_value(appraisal.appraisal_value_usd, 'decimal_required'),
+        appraisal_value_trochez=force_clean_value(appraisal.appraisal_value_trochez, 'decimal_required'),
+        apprasail_value_lower_cost=force_clean_value(appraisal.apprasail_value_lower_cost, 'decimal_required'),
+        apprasail_value_bank=force_clean_value(appraisal.apprasail_value_bank, 'decimal_required'),
+        apprasail_value_lower_bank=force_clean_value(appraisal.apprasail_value_lower_bank, 'decimal_required'),
+        notes=force_clean_value(appraisal.notes),
+        validity_days=force_clean_value(appraisal.validity_days, 'int_required'),
+        validity_kms=force_clean_value(appraisal.validity_kms, 'int_required'),
+        extras=force_clean_value(appraisal.extras),
+        vin_card=force_clean_value(appraisal.vin_card),
+        engine_number_card=force_clean_value(appraisal.engine_number_card),
+        modified_km=force_clean_value(appraisal.modified_km, 'decimal_optional'),
+        extra_value=force_clean_value(appraisal.extra_value, 'decimal_optional'),
+        discounts=force_clean_value(appraisal.discounts, 'decimal_optional'),
+        bank_value_in_dollars=force_clean_value(appraisal.bank_value_in_dollars, 'decimal_optional'),
+        total_deductions=force_clean_value(appraisal.total_deductions, 'decimal_optional'),
+        referencia_original=force_clean_value(appraisal.referencia_original, 'decimal_optional'),
+        cert=force_clean_value(appraisal.cert, 'int_optional'),
         is_deleted=False  # Por defecto en False
     )
     db.add(db_appraisal)

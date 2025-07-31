@@ -35,12 +35,13 @@ class VehicleAppraisal(Base):
     extras = Column(Text, nullable=True) 
     vin_card = Column(String(20), nullable=True)
     engine_number_card = Column(String(20), nullable=True)
-    modified_km = Column(Integer, nullable=True)
+    total_deductions = Column(Numeric(18, 2), nullable=True)  # Missing field found in DB
+    modified_km = Column(Numeric(18, 2), nullable=True)  # Changed from Integer to match DB
     extra_value = Column(Numeric(18, 2), nullable=True)
     discounts = Column(Numeric(18, 2), nullable=True)
     bank_value_in_dollars = Column(Numeric(18, 2), nullable=True)
-    referencia_original = Column(String(100), nullable=True)
-    cert = Column(String(100), nullable=True)
+    referencia_original = Column(Numeric, nullable=True)  # Changed to match DB (double precision)
+    cert = Column(Integer, nullable=True)  # Changed to match DB (integer)
     is_deleted = Column(Boolean, default=False, nullable=False)
 
     # Relación con AppraisalDeductions
