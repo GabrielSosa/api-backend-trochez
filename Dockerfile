@@ -1,29 +1,22 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PYTHONDONTWRITEBYTECODE=1
+
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv .venv
-COPY requirements.txt ./
-RUN .venv/bin/pip install --default-timeout=100 --upgrade pip setuptools wheel && \
-    .venv/bin/pip install --default-timeout=100 -r requirements.txt
+# Copy requirements and install Python packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.12-slim
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /app/.venv .venv/
+# Copy application code
 COPY . .
-CMD ["/app/.venv/bin/fastapi", "run"]
+
+# Run the application
+CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "8080"]
