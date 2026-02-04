@@ -7,8 +7,8 @@ WORKDIR /app
 
 RUN python -m venv .venv
 COPY requirements.txt ./
-RUN .venv/bin/pip install --upgrade pip && \
-    .venv/bin/pip install --no-cache-dir --upgrade -r requirements.txt
+RUN .venv/bin/pip install --default-timeout=100 --upgrade pip && \
+    .venv/bin/pip install --default-timeout=100 --no-cache-dir --upgrade -r requirements.txt
 FROM python:3.12.12-slim
 WORKDIR /app
 COPY --from=builder /app/.venv .venv/
