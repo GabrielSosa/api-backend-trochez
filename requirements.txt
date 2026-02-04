@@ -1,4 +1,4 @@
-alembic==1.13.1
+alembic>=1.13.0
 annotated-types==0.7.0
 anyio==3.7.1
 bcrypt==4.3.0
