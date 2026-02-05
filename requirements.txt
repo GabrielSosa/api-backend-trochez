@@ -1,6 +1,7 @@
 alembic>=1.13.0
 annotated-types==0.7.0
 anyio==3.7.1
+APScheduler==3.10.4
 bcrypt==4.3.0
 Brotli==1.1.0
 cffi==1.17.1

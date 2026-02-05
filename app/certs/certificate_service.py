@@ -214,6 +214,26 @@ class CertificateService:
         
         return output_path
     
+    def clean_old_pdfs(self):
+        """Delete all PDF files from the temp directory."""
+        try:
+            if not self.temp_dir.exists():
+                return
+            
+            pdf_files = list(self.temp_dir.glob("certificate_*.pdf"))
+            deleted_count = 0
+            
+            for pdf_file in pdf_files:
+                try:
+                    pdf_file.unlink()
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"Error deleting {pdf_file}: {e}")
+            
+            print(f"Cleaned {deleted_count} PDF files from temp directory at {datetime.now()}")
+        except Exception as e:
+            print(f"Error cleaning PDFs: {e}")
+    
     def number_to_words(self, number):
         """Convert a number to words in Spanish."""
         units = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE']
