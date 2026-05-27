@@ -260,24 +260,25 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         }
         .diagnosis-header {
             background-color: #e0e0e0;
-            padding: 2px 4px;
+            padding: 4px 8px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 12px;
         }
         .diagnosis-content {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
-            font-size: 10px;
+            font-size: 12px;
         }
         .diagnosis-content td {
-            padding: 2px 4px;
+            padding: 4px 8px;
             border-bottom: 1px dotted #ccc;
-            line-height: 1.1;
+            line-height: 1.3;
         }
         .diagnosis-content td:last-child {
             text-align: right;
-            width: 100px;
+            width: 120px;
+            font-variant-numeric: tabular-nums;
         }
         .total-amount {
             text-align: left;
