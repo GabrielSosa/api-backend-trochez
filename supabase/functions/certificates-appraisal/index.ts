@@ -1,8 +1,6 @@
 // GET /functions/v1/certificates-appraisal/{id}
 //
-// Returns an HTML certificate for the appraisal. The original FastAPI route used
-// WeasyPrint to render a PDF; here we return printable HTML — browsers can
-// render and print-to-PDF, and a future iteration can swap in a PDF service.
+// Returns an HTML certificate for the appraisal.
 //
 // Query params:
 //   format=html (default) — returns text/html
@@ -17,21 +15,27 @@ import { isHttpError, requireUser } from "../_shared/auth.ts";
 interface AppraisalRow {
   vehicle_appraisal_id: number;
   appraisal_date: string | null;
-  vehicle_brand: string | null;
-  vehicle_model: string | null;
-  vehicle_year: number | null;
-  vehicle_color: string | null;
-  vehicle_plate: string | null;
-  vehicle_mileage: number | null;
-  vehicle_vin: string | null;
-  vehicle_engine: string | null;
-  base_value: number | null;
-  final_value: number | null;
+  brand: string | null;
+  vehicle_description: string | null;
+  model_year: number | null;
+  color: string | null;
+  plate_number: string | null;
+  mileage: number | null;
+  vin: string | null;
+  engine_number: string | null;
+  apprasail_value_lower_cost: number | null;
+  appraisal_value_trochez: number | null;
+  appraisal_value_usd: number | null;
   notes: string | null;
-  owner_name: string | null;
-  owner_id: string | null;
-  owner_phone: string | null;
-  owner_email: string | null;
+  owner: string | null;
+  applicant: string | null;
+  fuel_type: string | null;
+  engine_size: string | null;
+  validity_days: number | null;
+  validity_kms: number | null;
+  extras: string | null;
+  cert: string | null;
+  referencia_original: string | null;
 }
 
 interface DeductionRow {
@@ -86,7 +90,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<title>Certificado de avalúo #${a.vehicle_appraisal_id}</title>
+<title>Certificado de avaluo #${a.vehicle_appraisal_id}</title>
 <style>
   body { font-family: Arial, Helvetica, sans-serif; margin: 40px; color: #222; }
   h1 { font-size: 22px; margin-bottom: 4px; }
@@ -105,27 +109,27 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
 </style>
 </head>
 <body>
-  <h1>Certificado de Avalúo Vehicular</h1>
-  <div class="meta">Folio #${a.vehicle_appraisal_id} · Fecha: ${esc(a.appraisal_date ?? "")}</div>
+  <h1>Certificado de Avaluo Vehicular</h1>
+  <div class="meta">Folio #${a.vehicle_appraisal_id} · Fecha: ${esc(a.appraisal_date ?? "")} · Ref: ${esc(a.cert ?? "")}</div>
 
-  <h2>Datos del vehículo</h2>
+  <h2>Datos del vehiculo</h2>
   <div class="grid">
-    <div class="k">Marca</div><div>${esc(a.vehicle_brand)}</div>
-    <div class="k">Modelo</div><div>${esc(a.vehicle_model)}</div>
-    <div class="k">Año</div><div>${esc(a.vehicle_year)}</div>
-    <div class="k">Color</div><div>${esc(a.vehicle_color)}</div>
-    <div class="k">Placa</div><div>${esc(a.vehicle_plate)}</div>
-    <div class="k">Kilometraje</div><div>${esc(a.vehicle_mileage)}</div>
-    <div class="k">VIN</div><div>${esc(a.vehicle_vin)}</div>
-    <div class="k">Motor</div><div>${esc(a.vehicle_engine)}</div>
+    <div class="k">Marca</div><div>${esc(a.brand)}</div>
+    <div class="k">Modelo</div><div>${esc(a.vehicle_description)}</div>
+    <div class="k">Anio</div><div>${esc(a.model_year)}</div>
+    <div class="k">Color</div><div>${esc(a.color)}</div>
+    <div class="k">Placa</div><div>${esc(a.plate_number)}</div>
+    <div class="k">Kilometraje</div><div>${esc(a.mileage)}</div>
+    <div class="k">Combustible</div><div>${esc(a.fuel_type)}</div>
+    <div class="k">Motor</div><div>${esc(a.engine_size)}</div>
+    <div class="k">VIN</div><div>${esc(a.vin)}</div>
+    <div class="k">No. Motor</div><div>${esc(a.engine_number)}</div>
   </div>
 
-  <h2>Propietario</h2>
+  <h2>Propietario / Solicitante</h2>
   <div class="grid">
-    <div class="k">Nombre</div><div>${esc(a.owner_name)}</div>
-    <div class="k">Identidad</div><div>${esc(a.owner_id)}</div>
-    <div class="k">Teléfono</div><div>${esc(a.owner_phone)}</div>
-    <div class="k">Correo</div><div>${esc(a.owner_email)}</div>
+    <div class="k">Propietario</div><div>${esc(a.owner)}</div>
+    <div class="k">Solicitante</div><div>${esc(a.applicant)}</div>
   </div>
 
   <h2>Deducciones</h2>
@@ -137,11 +141,14 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   </table>
 
   <div class="totals">
-    <div class="row"><span>Valor base</span><span class="num">${fmtMoney(a.base_value)}</span></div>
-    <div class="row final"><span>Valor final</span><span class="num">${fmtMoney(a.final_value)}</span></div>
+    <div class="row"><span>Valor base</span><span class="num">${fmtMoney(a.apprasail_value_lower_cost)}</span></div>
+    <div class="row"><span>Valor banco</span><span class="num">${fmtMoney(a.appraisal_value_usd)}</span></div>
+    <div class="row final"><span>Valor final (Lempiras)</span><span class="num">${fmtMoney(a.appraisal_value_trochez)}</span></div>
   </div>
 
+  ${a.validity_days ? `<div class="meta" style="margin-top:12px">Validez: ${a.validity_days} dias / ${a.validity_kms ?? "N/A"} kms</div>` : ""}
   ${a.notes ? `<h2>Notas</h2><div>${esc(a.notes)}</div>` : ""}
+  ${a.extras ? `<h2>Extras</h2><div>${esc(a.extras)}</div>` : ""}
 </body>
 </html>`;
 }
