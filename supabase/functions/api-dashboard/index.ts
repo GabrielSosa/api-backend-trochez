@@ -1,8 +1,8 @@
 // Routes (all require Bearer token):
-//   GET /api-dashboard/summary             -> totals & comparisons month vs. previous
-//   GET /api-dashboard/ventas-dia          -> today's appraisals
-//   GET /api-dashboard/ventas-mes          -> current-month appraisals grouped by day
-//   GET /api-dashboard/carros-mas-avaluos  -> top vehicles by appraisal count
+// GET /api-dashboard/summary           -> totals & comparisons month vs. previous
+// GET /api-dashboard/ventas-dia        -> today's appraisals
+// GET /api-dashboard/ventas-mes        -> current-month appraisals grouped by day
+// GET /api-dashboard/carros-mas-avaluos -> top vehicles by appraisal count
 
 import { errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
@@ -31,30 +31,33 @@ async function handleSummary(): Promise<Response> {
   const current = monthRange(0);
   const previous = monthRange(-1);
 
+  // Use appraisal_value_trochez as the primary value (local currency)
   const [{ data: curRows, error: curErr }, { data: prevRows, error: prevErr }] = await Promise.all([
     supabase
       .from("vehicle_appraisal")
-      .select("vehicle_appraisal_id, final_value, base_value")
+      .select("vehicle_appraisal_id, appraisal_value_trochez, apprasail_value_lower_cost")
       .gte("appraisal_date", current.start)
       .lt("appraisal_date", current.end),
     supabase
       .from("vehicle_appraisal")
-      .select("vehicle_appraisal_id, final_value, base_value")
+      .select("vehicle_appraisal_id, appraisal_value_trochez, apprasail_value_lower_cost")
       .gte("appraisal_date", previous.start)
       .lt("appraisal_date", previous.end),
   ]);
   if (curErr) return errorResponse(curErr.message, 500);
   if (prevErr) return errorResponse(prevErr.message, 500);
 
-  const sum = (rows: Array<{ final_value: number | null; base_value: number | null }> | null, key: "final_value" | "base_value") =>
-    (rows ?? []).reduce((acc, r) => acc + Number(r[key] ?? 0), 0);
+  const sum = (
+    rows: Array<{ appraisal_value_trochez: number | null; apprasail_value_lower_cost: number | null }> | null,
+    key: "appraisal_value_trochez" | "apprasail_value_lower_cost",
+  ) => (rows ?? []).reduce((acc, r) => acc + Number(r[key] ?? 0), 0);
 
   const currentCount = curRows?.length ?? 0;
   const previousCount = prevRows?.length ?? 0;
-  const currentFinal = sum(curRows, "final_value");
-  const previousFinal = sum(prevRows, "final_value");
-  const currentBase = sum(curRows, "base_value");
-  const previousBase = sum(prevRows, "base_value");
+  const currentFinal = sum(curRows, "appraisal_value_trochez");
+  const previousFinal = sum(prevRows, "appraisal_value_trochez");
+  const currentBase = sum(curRows, "apprasail_value_lower_cost");
+  const previousBase = sum(prevRows, "apprasail_value_lower_cost");
 
   const pct = (a: number, b: number) =>
     b === 0 ? (a === 0 ? 0 : 100) : Number((((a - b) / b) * 100).toFixed(2));
@@ -88,7 +91,7 @@ async function handleVentasDia(): Promise<Response> {
   const { data, error } = await supabase
     .from("vehicle_appraisal")
     .select(
-      "vehicle_appraisal_id, appraisal_date, vehicle_brand, vehicle_model, vehicle_plate, owner_name, final_value, base_value",
+      "vehicle_appraisal_id, appraisal_date, brand, vehicle_description, plate_number, owner, appraisal_value_trochez, apprasail_value_lower_cost",
     )
     .eq("appraisal_date", today)
     .order("vehicle_appraisal_id", { ascending: false });
@@ -101,7 +104,7 @@ async function handleVentasMes(): Promise<Response> {
   const { start, end } = monthRange(0);
   const { data, error } = await supabase
     .from("vehicle_appraisal")
-    .select("appraisal_date, final_value, base_value")
+    .select("appraisal_date, appraisal_value_trochez, apprasail_value_lower_cost")
     .gte("appraisal_date", start)
     .lt("appraisal_date", end);
   if (error) return errorResponse(error.message, 500);
@@ -111,8 +114,8 @@ async function handleVentasMes(): Promise<Response> {
     const day = (row.appraisal_date as string).slice(0, 10);
     const cur = byDay.get(day) ?? { count: 0, total_final_value: 0, total_base_value: 0 };
     cur.count += 1;
-    cur.total_final_value += Number(row.final_value ?? 0);
-    cur.total_base_value += Number(row.base_value ?? 0);
+    cur.total_final_value += Number(row.appraisal_value_trochez ?? 0);
+    cur.total_base_value += Number(row.apprasail_value_lower_cost ?? 0);
     byDay.set(day, cur);
   }
 
@@ -123,28 +126,26 @@ async function handleVentasMes(): Promise<Response> {
   return jsonResponse({ start, end, items });
 }
 
-async function handleCarrosMasAvaluos(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const limit = Math.max(1, Math.min(50, Number(url.searchParams.get("limit") ?? "10") | 0));
-
+async function handleCarrosMasAvaluos(): Promise<Response> {
   const supabase = getSupabase();
+  // Group by brand + vehicle_description for meaningful grouping
   const { data, error } = await supabase
     .from("vehicle_appraisal")
-    .select("vehicle_brand, vehicle_model");
+    .select("brand, vehicle_description");
   if (error) return errorResponse(error.message, 500);
 
-  const buckets = new Map<string, { vehicle_brand: string; vehicle_model: string; count: number }>();
+  const counts = new Map<string, { brand: string; vehicle_description: string; count: number }>();
   for (const row of data ?? []) {
-    const brand = (row.vehicle_brand ?? "").trim();
-    const model = (row.vehicle_model ?? "").trim();
-    if (!brand && !model) continue;
-    const key = `${brand}||${model}`.toLowerCase();
-    const cur = buckets.get(key) ?? { vehicle_brand: brand, vehicle_model: model, count: 0 };
+    const key = `${row.brand ?? "Unknown"}|${row.vehicle_description ?? ""}`;
+    const cur = counts.get(key) ?? { brand: row.brand ?? "Unknown", vehicle_description: row.vehicle_description ?? "", count: 0 };
     cur.count += 1;
-    buckets.set(key, cur);
+    counts.set(key, cur);
   }
 
-  const items = [...buckets.values()].sort((a, b) => b.count - a.count).slice(0, limit);
+  const items = [...counts.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
   return jsonResponse({ items });
 }
 
@@ -152,28 +153,24 @@ Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
+  let _user;
   try {
-    await requireUser(req);
+    _user = await requireUser(req);
   } catch (e) {
     if (isHttpError(e)) return errorResponse(e.message, e.status);
     throw e;
   }
 
-  if (req.method !== "GET") return errorResponse("Method not allowed", 405);
+  const subroute = getSubroute(new URL(req.url).pathname);
 
-  const url = new URL(req.url);
-  const sub = getSubroute(url.pathname);
-
-  switch (sub) {
-    case "summary":
-      return handleSummary();
-    case "ventas-dia":
-      return handleVentasDia();
-    case "ventas-mes":
-      return handleVentasMes();
-    case "carros-mas-avaluos":
-      return handleCarrosMasAvaluos(req);
-    default:
-      return errorResponse("Not found", 404);
+  if (req.method === "GET") {
+    if (subroute === "summary") return handleSummary();
+    if (subroute === "ventas-dia") return handleVentasDia();
+    if (subroute === "ventas-mes") return handleVentasMes();
+    if (subroute === "carros-mas-avaluos") return handleCarrosMasAvaluos();
+    // Root ping (used by cron job to keep DB alive)
+    if (subroute === null) return jsonResponse({ status: "ok" });
   }
+
+  return errorResponse("Not found", 404);
 }));
