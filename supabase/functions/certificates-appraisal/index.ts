@@ -342,15 +342,18 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         }
         .validity-stamp {
             position: absolute;
-            bottom: 10px;
-            right: 1cm;
+            bottom: 15px;
+            right: 1.2cm;
             border: 2px solid red;
             color: red;
-            padding: 5px 10px;
+            padding: 6px 14px;
             font-weight: bold;
             white-space: nowrap;
-            z-index: 1;
-            text-align: right;
+            z-index: 2;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.1;
+            background: white;
         }
     </style>
 </head>
@@ -374,9 +377,9 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
-                    <td style="font-size: 14px; background-color: white; padding: 5px 10px; width: 30%;">
-                        <div>${esc(a.brand)}</div>
-                        <div style="font-size: 12px; line-height: 1.2; margin-top: 2px;">${esc(a.vehicle_description)}</div>
+                    <td style="background-color: white; padding: 5px 10px; width: 30%;">
+                        <div style="font-size: 13px; line-height: 1.25;">${esc(a.brand)}</div>
+                        <div style="font-size: 13px; line-height: 1.25; margin-top: 2px;">${esc(a.vehicle_description)}</div>
                     </td>
                     <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
                         <table style="width: 100%;">
@@ -422,7 +425,6 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         </table>
 
         <div class="notes-section">
-            <div>10:00 AVALÚO SE HIZO ${esc(formattedDate)} NUMERO OP SALES FORCE ${esc(formattedDate)} 2:10PM</div>
             <div style="font-weight: bold;">NOTA: ${esc(a.notes)}</div>
         </div>
 
