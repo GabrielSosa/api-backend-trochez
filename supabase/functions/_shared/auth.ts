@@ -1,29 +1,64 @@
-// JWT helpers — drop-in replacement for python-jose HS256 tokens used by the
-// FastAPI backend. The same JWT_SECRET must be configured as a Supabase secret
-// so previously issued tokens keep validating.
+// JWT helpers — pure Web Crypto API implementation (no external dependencies).
+// Uses HS256 with the JWT_SECRET configured as a Supabase secret.
 
-import {
-  create,
-  verify,
-  getNumericDate,
-  Payload,
-} from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 import { getSupabase } from "./db.ts";
 
-const ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24; // 24h, same default as the FastAPI app
+const ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24; // 24h
 
-async function getKey(): Promise<CryptoKey> {
+// ── Base64URL helpers ──────────────────────────────────────────────────────────
+
+function base64urlEncode(data: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+function base64urlDecode(str: string): Uint8Array {
+  const padded = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = (4 - (padded.length % 4)) % 4;
+  const binary = atob(padded + "=".repeat(padding));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+// ── Key helper ─────────────────────────────────────────────────────────────────
+
+async function getKey(usage: "sign" | "verify"): Promise<CryptoKey> {
   const secret = Deno.env.get("JWT_SECRET");
   if (!secret) throw new Error("JWT_SECRET is not configured");
-
   return await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"],
+    [usage],
   );
 }
+
+// ── Create token ───────────────────────────────────────────────────────────────
+
+export async function createAccessToken(
+  payload: { sub: string; user_id: number; user_type_id: number | null },
+): Promise<string> {
+  const header = base64urlEncode(
+    new TextEncoder().encode(JSON.stringify({ alg: "HS256", typ: "JWT" })),
+  );
+  const exp = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRE_MINUTES * 60;
+  const body = base64urlEncode(
+    new TextEncoder().encode(JSON.stringify({ ...payload, exp })),
+  );
+  const signing = header + "." + body;
+  const key = await getKey("sign");
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(signing),
+  );
+  return signing + "." + base64urlEncode(new Uint8Array(sig));
+}
+
+// ── Verify token ───────────────────────────────────────────────────────────────
 
 export interface TokenUser {
   user_id: number;
@@ -31,39 +66,48 @@ export interface TokenUser {
   user_type_id: number | null;
 }
 
-export async function createAccessToken(
-  payload: { sub: string; user_id: number; user_type_id: number | null },
-): Promise<string> {
-  const key = await getKey();
-  const jwt = await create(
-    { alg: "HS256", typ: "JWT" },
-    {
-      ...payload,
-      exp: getNumericDate(ACCESS_TOKEN_EXPIRE_MINUTES * 60),
-    } as Payload,
-    key,
-  );
-  return jwt;
-}
-
-/**
- * Verify the Authorization header and return the user record from the DB.
- * Throws an Error with `.status` set when authentication fails — callers can
- * convert that into a JSON error response.
- */
 export async function requireUser(req: Request): Promise<TokenUser> {
-  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+  const authHeader =
+    req.headers.get("authorization") ?? req.headers.get("Authorization");
   if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
     throw httpError("Not authenticated", 401);
   }
   const token = authHeader.slice(7).trim();
 
-  let payload: Payload;
+  const parts = token.split(".");
+  if (parts.length !== 3) throw httpError("Could not validate credentials", 401);
+
+  const [header, body, sigB64] = parts;
+  const signing = header + "." + body;
+
+  // Verify signature
+  let valid = false;
   try {
-    const key = await getKey();
-    payload = await verify(token, key);
+    const key = await getKey("verify");
+    const sigBytes = base64urlDecode(sigB64);
+    valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      sigBytes,
+      new TextEncoder().encode(signing),
+    );
   } catch (_) {
     throw httpError("Could not validate credentials", 401);
+  }
+  if (!valid) throw httpError("Could not validate credentials", 401);
+
+  // Decode payload
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(base64urlDecode(body)));
+  } catch (_) {
+    throw httpError("Could not validate credentials", 401);
+  }
+
+  // Check expiry
+  const exp = payload.exp as number | undefined;
+  if (exp && Math.floor(Date.now() / 1000) > exp) {
+    throw httpError("Token expired", 401);
   }
 
   const email = (payload.sub as string | undefined) ?? null;
@@ -84,6 +128,8 @@ export async function requireUser(req: Request): Promise<TokenUser> {
     user_type_id: data.user_type_id,
   };
 }
+
+// ── Error helpers ──────────────────────────────────────────────────────────────
 
 export interface HttpError extends Error {
   status: number;
