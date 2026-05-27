@@ -162,9 +162,10 @@ async function handleList(req: Request): Promise<Response> {
     : Math.max(0, Number(url.searchParams.get("skip") ?? "0") | 0);
 
   const supabase = getSupabase();
+  // Use { count: "exact" } in options, NOT in select string
   const { data, error, count } = await supabase
     .from("vehicle_appraisal")
-    .select(APPRAISAL_COLUMNS + ",count()", { count: "exact" })
+    .select(APPRAISAL_COLUMNS, { count: "exact" })
     .order("vehicle_appraisal_id", { ascending: false })
     .range(skip, skip + limit - 1);
 
