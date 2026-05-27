@@ -184,6 +184,14 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             size: letter;
             margin: 0;
         }
+        /* Force backgrounds (the pastel-blue bands) to render on paper / PDF.
+           Without this Chrome/Safari/Edge strip every background-color and
+           the printed certificate comes out all-white. */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
