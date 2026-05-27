@@ -235,7 +235,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             margin-bottom: 1cm;
         }
         .info-section {
-            background: #e0e0e0;
+            background: #dbe7f3;
             padding: 10px;
             margin-bottom: 15px;
         }
@@ -251,7 +251,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .label-cell {
             font-weight: bold;
             width: 100px;
-            background-color: #e0e0e0;
+            background-color: #dbe7f3;
         }
         .small-label {
             font-size: 10px;
@@ -259,7 +259,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             display: block;
         }
         .diagnosis-header {
-            background-color: #e0e0e0;
+            background-color: #dbe7f3;
             padding: 4px 8px;
             font-weight: bold;
             font-size: 12px;
@@ -376,7 +376,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         </div>
         <div class="main-title">Certificado de Avalúo</div>
 
-        <div class="info-section" style="padding: 0; background: #e0e0e0; border-top: 2px solid #e0e0e0;">
+        <div class="info-section" style="padding: 0; background: #dbe7f3; border-top: 2px solid #dbe7f3;">
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
@@ -384,7 +384,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                         <div>${esc(a.brand)}</div>
                         <div style="margin-top: 2px;">${esc(a.vehicle_description)}</div>
                     </td>
-                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td style="text-align: center;"><span class="small-label">AÑO</span>${esc(a.model_year)}</td>
@@ -399,7 +399,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Solicitante</td>
                     <td style="background-color: white; padding: 5px 10px;" colspan="1">${esc(a.applicant)}</td>
-                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td style="text-align: left;"><span class="small-label">COLOR</span>${esc(a.color)}</td>
@@ -412,7 +412,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Propietario</td>
                     <td style="background-color: white; padding: 5px 10px;" colspan="1">${esc(a.owner)}</td>
-                    <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
+                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td colspan="6">${esc(a.extras)}</td>
@@ -477,7 +477,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
 
         <div class="vin-section" style="padding: 0;">
             <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                <tr style="background: #e0e0e0;">
+                <tr style="background: #dbe7f3;">
                     <td style="width: 50%; padding: 1px 12px;">
                         <span class="vin-label">VIN</span>
                     </td>
@@ -486,14 +486,14 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                     </td>
                 </tr>
                 <tr>
-                    <td style="border-bottom: 2px solid #e0e0e0; padding: 4px 12px;">
+                    <td style="border-bottom: 2px solid #dbe7f3; padding: 4px 12px;">
                         <span>${esc(a.vin)}</span>
                     </td>
-                    <td style="border-bottom: 2px solid #e0e0e0; padding: 4px 12px;">
+                    <td style="border-bottom: 2px solid #dbe7f3; padding: 4px 12px;">
                         <span>${esc(a.engine_number)}</span>
                     </td>
                 </tr>
-                <tr style="background: #e0e0e0;">
+                <tr style="background: #dbe7f3;">
                     <td style="padding: 1px 12px;">
                         <span class="vin-label">VIN en tarjeta</span>
                     </td>
