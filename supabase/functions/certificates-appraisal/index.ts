@@ -156,9 +156,11 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   const formattedAppraisalValue = appraisalUsd > 0 ? `$${fmtIntSpaced(appraisalUsd)}` : "";
   const appraisalValueWords = appraisalUsd > 0 ? numberToWords(Math.trunc(appraisalUsd)) : "";
 
-  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> apprasail_value_lower_cost (campo calculado,
-  // siempre tiene valor; bank_value_in_dollars es un input opcional que suele estar vacío).
-  const bankUsd = toNumber(a.apprasail_value_lower_cost);
+  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> bank_value_in_dollars (USD).
+  // Si el avalúo no tiene ese input cargado, el bloque queda vacío en lugar de
+  // mostrar el valor del avalúo en CRC con el cartel "DÓLARES" (que es lo que
+  // estaba pasando con apprasail_value_lower_cost).
+  const bankUsd = toNumber(a.bank_value_in_dollars);
   const formattedBankValue = bankUsd > 0 ? `$${fmtIntSpaced(bankUsd)}` : "";
   const bankValueWords = bankUsd > 0 ? numberToWords(Math.trunc(bankUsd)) : "";
 
@@ -377,9 +379,9 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
-                    <td style="background-color: white; padding: 5px 10px; width: 30%;">
-                        <div style="font-size: 13px; line-height: 1.25;">${esc(a.brand)}</div>
-                        <div style="font-size: 13px; line-height: 1.25; margin-top: 2px;">${esc(a.vehicle_description)}</div>
+                    <td style="background-color: white; padding: 5px 10px; width: 30%; line-height: 1.3;">
+                        <div>${esc(a.brand)}</div>
+                        <div style="margin-top: 2px;">${esc(a.vehicle_description)}</div>
                     </td>
                     <td style="padding: 5px 10px; background-color: #e0e0e0;" colspan="5">
                         <table style="width: 100%;">
