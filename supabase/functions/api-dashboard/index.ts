@@ -4,7 +4,7 @@
 //   GET /api-dashboard/ventas-mes          -> current-month appraisals grouped by day
 //   GET /api-dashboard/carros-mas-avaluos  -> top vehicles by appraisal count
 
-import { errorResponse, handlePreflight, jsonResponse } from "../_shared/cors.ts";
+import { errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
 import { isHttpError, requireUser } from "../_shared/auth.ts";
 
@@ -148,7 +148,7 @@ async function handleCarrosMasAvaluos(req: Request): Promise<Response> {
   return jsonResponse({ items });
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -176,4 +176,4 @@ Deno.serve(async (req: Request) => {
     default:
       return errorResponse("Not found", 404);
   }
-});
+}));

@@ -2,12 +2,12 @@
 // Body: { email, password }
 // Returns: { access_token, token_type, user: { user_id, name, email, user_type_id } }
 
-import { errorResponse, handlePreflight, jsonResponse } from "../_shared/cors.ts";
+import { errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
 import { verifyPassword } from "../_shared/hash.ts";
 import { createAccessToken } from "../_shared/auth.ts";
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -60,4 +60,4 @@ Deno.serve(async (req: Request) => {
       user_type_id: user.user_type_id,
     },
   });
-});
+}));

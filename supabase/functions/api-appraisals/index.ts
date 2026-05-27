@@ -6,7 +6,7 @@
 //   PUT    /api-appraisals/{id}                -> update appraisal (+ replace deductions)
 //   DELETE /api-appraisals/{id}                -> delete (cascades deductions)
 
-import { errorResponse, handlePreflight, jsonResponse } from "../_shared/cors.ts";
+import { errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
 import { isHttpError, requireUser, TokenUser } from "../_shared/auth.ts";
 
@@ -111,8 +111,12 @@ async function loadAppraisalWithDeductions(id: number) {
 
 async function handleList(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const skip = Math.max(0, Number(url.searchParams.get("skip") ?? "0") | 0);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? "50") | 0));
+  // Accept either ?skip=N or ?page=N (page is 1-indexed) — frontend sends page.
+  const pageParam = url.searchParams.get("page");
+  const skip = pageParam !== null
+    ? Math.max(0, (Math.max(1, Number(pageParam) | 0) - 1) * limit)
+    : Math.max(0, Number(url.searchParams.get("skip") ?? "0") | 0);
 
   const supabase = getSupabase();
   const { data, error, count } = await supabase
@@ -122,7 +126,16 @@ async function handleList(req: Request): Promise<Response> {
     .range(skip, skip + limit - 1);
   if (error) return errorResponse(error.message, 500);
 
-  return jsonResponse({ items: data ?? [], total: count ?? 0, skip, limit });
+  const page = Math.floor(skip / limit) + 1;
+  const totalPages = limit > 0 ? Math.ceil((count ?? 0) / limit) : 0;
+  return jsonResponse({
+    items: data ?? [],
+    total: count ?? 0,
+    skip,
+    limit,
+    page,
+    total_pages: totalPages,
+  });
 }
 
 async function handleSearch(req: Request): Promise<Response> {
@@ -240,7 +253,7 @@ async function handleDelete(id: number): Promise<Response> {
   return jsonResponse({ detail: "Appraisal deleted" });
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -273,4 +286,4 @@ Deno.serve(async (req: Request) => {
   if (req.method === "DELETE" && id !== null) return handleDelete(id);
 
   return errorResponse("Not found", 404);
-});
+}));

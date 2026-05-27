@@ -10,7 +10,7 @@
 //
 // Auth: required (Bearer token).
 
-import { errorResponse, handlePreflight, jsonResponse, corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders, errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
 import { isHttpError, requireUser } from "../_shared/auth.ts";
 
@@ -146,7 +146,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
 </html>`;
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -188,4 +188,4 @@ Deno.serve(async (req: Request) => {
     status: 200,
     headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8" },
   });
-});
+}));

@@ -2,12 +2,12 @@
 // Body: { name, email, password, user_type_id? }
 // Auth: required
 
-import { errorResponse, handlePreflight, jsonResponse } from "../_shared/cors.ts";
+import { errorResponse, handlePreflight, jsonResponse, withErrorBoundary } from "../_shared/cors.ts";
 import { getSupabase } from "../_shared/db.ts";
 import { hashPassword } from "../_shared/hash.ts";
 import { isHttpError, requireUser } from "../_shared/auth.ts";
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withErrorBoundary(async (req: Request) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -70,4 +70,4 @@ Deno.serve(async (req: Request) => {
   }
 
   return jsonResponse(created, 201);
-});
+}));
