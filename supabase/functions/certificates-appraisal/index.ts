@@ -42,9 +42,14 @@ interface AppraisalRow {
   validity_days: number | null;
   validity_kms: number | null;
   extras: string | null;
+  vin_card: string | null;
+  engine_number_card: string | null;
   appraisal_value_usd: number | string | null;
   appraisal_value_trochez: number | string | null;
   apprasail_value_lower_cost: number | string | null;
+  apprasail_value_bank: number | string | null;
+  apprasail_value_lower_bank: number | string | null;
+  bank_value_in_dollars: number | string | null;
   cert: number | string | null;
   referencia_original: number | string | null;
 }
@@ -152,8 +157,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   const formattedAppraisalValue = appraisalUsd > 0 ? `$${fmtIntSpaced(appraisalUsd)}` : "";
   const appraisalValueWords = appraisalUsd > 0 ? numberToWords(Math.trunc(appraisalUsd)) : "";
 
-  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> apprasail_value_lower_cost
-  const bankUsd = toNumber(a.apprasail_value_lower_cost);
+  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> bank_value_in_dollars (igual que el FastAPI original)
+  const bankUsd = toNumber(a.bank_value_in_dollars);
   const formattedBankValue = bankUsd > 0 ? `$${fmtIntSpaced(bankUsd)}` : "";
   const bankValueWords = bankUsd > 0 ? numberToWords(Math.trunc(bankUsd)) : "";
 
@@ -493,10 +498,10 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                 </tr>
                 <tr>
                     <td style="padding: 4px 12px;">
-                        <span></span>
+                        <span>${esc(a.vin_card)}</span>
                     </td>
                     <td style="padding: 4px 12px;">
-                        <span></span>
+                        <span>${esc(a.engine_number_card)}</span>
                     </td>
                 </tr>
             </table>
@@ -529,9 +534,14 @@ const APPRAISAL_COLUMNS = [
   "validity_days",
   "validity_kms",
   "extras",
+  "vin_card",
+  "engine_number_card",
   "appraisal_value_usd",
   "appraisal_value_trochez",
   "apprasail_value_lower_cost",
+  "apprasail_value_bank",
+  "apprasail_value_lower_bank",
+  "bank_value_in_dollars",
   "cert",
   "referencia_original",
 ].join(",");
