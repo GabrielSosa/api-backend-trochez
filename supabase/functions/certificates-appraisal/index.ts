@@ -55,10 +55,9 @@ interface AppraisalRow {
 }
 
 interface DeductionRow {
-  deduction_id: number;
-  deduction_name: string | null;
-  deduction_percentage: number | string | null;
-  deduction_value: number | string | null;
+  appraisal_deductions_id: number;
+  description: string | null;
+  amount: number | string | null;
 }
 
 function extractId(pathname: string): number | null {
@@ -149,7 +148,7 @@ function formatDate(input: string | null): string {
 function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   const formattedDate = formatDate(a.appraisal_date);
 
-  const totalDeductions = deductions.reduce((sum, d) => sum + toNumber(d.deduction_value), 0);
+  const totalDeductions = deductions.reduce((sum, d) => sum + toNumber(d.amount), 0);
   const formattedTotalDeductions = `₡${fmtIntSpaced(totalDeductions)}`;
 
   // Lado derecho: "VALOR SUGERIDO PARA ENTREGA EN DISTRIBUIDORA" -> appraisal_value_usd
@@ -157,8 +156,9 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   const formattedAppraisalValue = appraisalUsd > 0 ? `$${fmtIntSpaced(appraisalUsd)}` : "";
   const appraisalValueWords = appraisalUsd > 0 ? numberToWords(Math.trunc(appraisalUsd)) : "";
 
-  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> bank_value_in_dollars (igual que el FastAPI original)
-  const bankUsd = toNumber(a.bank_value_in_dollars);
+  // Lado izquierdo: "VALOR MAXIMO DE GARANTIA BANCARIA" -> apprasail_value_lower_cost (campo calculado,
+  // siempre tiene valor; bank_value_in_dollars es un input opcional que suele estar vacío).
+  const bankUsd = toNumber(a.apprasail_value_lower_cost);
   const formattedBankValue = bankUsd > 0 ? `$${fmtIntSpaced(bankUsd)}` : "";
   const bankValueWords = bankUsd > 0 ? numberToWords(Math.trunc(bankUsd)) : "";
 
@@ -166,8 +166,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
     .map(
       (d) => `
             <tr>
-                <td>${esc(d.deduction_name)}</td>
-                <td>${esc(d.deduction_value ?? "")}</td>
+                <td>${esc(d.description)}</td>
+                <td>${esc(d.amount ?? "")}</td>
             </tr>`,
     )
     .join("");
@@ -574,9 +574,9 @@ Deno.serve(withErrorBoundary(async (req: Request) => {
 
   const { data: deductions } = await supabase
     .from("appraisal_deductions")
-    .select("deduction_id, deduction_name, deduction_percentage, deduction_value")
+    .select("appraisal_deductions_id, description, amount")
     .eq("vehicle_appraisal_id", id)
-    .order("deduction_id", { ascending: true });
+    .order("appraisal_deductions_id", { ascending: true });
 
   const format = (url.searchParams.get("format") ?? "html").toLowerCase();
   if (format === "json") {

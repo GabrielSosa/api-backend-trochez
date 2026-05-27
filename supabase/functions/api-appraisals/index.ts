@@ -11,9 +11,8 @@ import { getSupabase } from "../_shared/db.ts";
 import { isHttpError, requireUser, TokenUser } from "../_shared/auth.ts";
 
 interface DeductionInput {
-  deduction_name?: string | null;
-  deduction_percentage?: number | null;
-  deduction_value?: number | null;
+  description?: string | null;
+  amount?: number | null;
 }
 
 // Matches the actual vehicle_appraisal table schema
@@ -145,9 +144,9 @@ async function loadAppraisalWithDeductions(id: number) {
 
   const { data: deductions } = await supabase
     .from("appraisal_deductions")
-    .select("deduction_id, vehicle_appraisal_id, deduction_name, deduction_percentage, deduction_value")
+    .select("appraisal_deductions_id, vehicle_appraisal_id, description, amount")
     .eq("vehicle_appraisal_id", id)
-    .order("deduction_id", { ascending: true });
+    .order("appraisal_deductions_id", { ascending: true });
 
   return { ...appraisal, deductions: deductions ?? [] };
 }
@@ -220,9 +219,8 @@ async function handleCreate(req: Request, user: TokenUser): Promise<Response> {
   if (deductions.length > 0) {
     const rows = deductions.map((d) => ({
       vehicle_appraisal_id: appraisal.vehicle_appraisal_id,
-      deduction_name: d.deduction_name ?? null,
-      deduction_percentage: d.deduction_percentage ?? null,
-      deduction_value: d.deduction_value ?? null,
+      description: d.description ?? null,
+      amount: d.amount ?? null,
     }));
     const { error: dErr } = await supabase.from("appraisal_deductions").insert(rows);
     if (dErr) return errorResponse(dErr.message, 500);
@@ -253,9 +251,8 @@ async function handleUpdate(req: Request, id: number, _user: TokenUser): Promise
     if (body.deductions.length > 0) {
       const rows = body.deductions.map((d) => ({
         vehicle_appraisal_id: id,
-        deduction_name: d.deduction_name ?? null,
-        deduction_percentage: d.deduction_percentage ?? null,
-        deduction_value: d.deduction_value ?? null,
+        description: d.description ?? null,
+        amount: d.amount ?? null,
       }));
       const { error: dErr } = await supabase.from("appraisal_deductions").insert(rows);
       if (dErr) return errorResponse(dErr.message, 500);
