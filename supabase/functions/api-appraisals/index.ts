@@ -1,8 +1,11 @@
 // Routes (all require Bearer token):
-// GET  /api-appraisals?skip=0&limit=50     -> paginated list
-// GET  /api-appraisals/search?q=...        -> search by plate/owner/vin/brand
+// GET  /api-appraisals?skip=0&limit=50&q=&orderBy=&orderDir=&brand=&color=&from=&to=
+//                                          -> paginated list with optional search, sort and filters
+// GET  /api-appraisals/search?q=...        -> kept for backwards compat; same effect as /api-appraisals?q=
 // GET  /api-appraisals/{id}                -> appraisal + deductions
 // POST /api-appraisals                     -> create appraisal (+ deductions)
+// POST /api-appraisals/bulk-delete         -> body {ids:number[]}; deletes many in one call
+// POST /api-appraisals/{id}/duplicate      -> duplicates the appraisal with all deductions
 // PUT  /api-appraisals/{id}                -> update appraisal (+ replace deductions)
 // DELETE /api-appraisals/{id}              -> delete (cascades deductions)
 
@@ -122,16 +125,35 @@ function pickAppraisalFields(body: AppraisalBody) {
   };
 }
 
-function parseSubpath(pathname: string): { id: number | null; tail: string | null } {
+function parseSubpath(
+  pathname: string,
+): { id: number | null; tail: string | null; subtail: string | null } {
   const parts = pathname.split("/").filter(Boolean);
   const idx = parts.findIndex((p) => p === "api-appraisals");
-  if (idx === -1 || idx === parts.length - 1) return { id: null, tail: null };
+  if (idx === -1 || idx === parts.length - 1) return { id: null, tail: null, subtail: null };
   const next = parts[idx + 1];
-  if (next === "search") return { id: null, tail: "search" };
+  if (next === "search" || next === "bulk-delete") {
+    return { id: null, tail: next, subtail: null };
+  }
   const n = Number(next);
-  if (Number.isInteger(n)) return { id: n, tail: null };
-  return { id: null, tail: next };
+  if (Number.isInteger(n)) {
+    const subtail = parts[idx + 2] ?? null;
+    return { id: n, tail: null, subtail };
+  }
+  return { id: null, tail: next, subtail: null };
 }
+
+const SORTABLE_COLUMNS = new Set([
+  "vehicle_appraisal_id",
+  "appraisal_date",
+  "brand",
+  "model_year",
+  "owner",
+  "applicant",
+  "plate_number",
+  "appraisal_value_trochez",
+  "appraisal_value_usd",
+]);
 
 async function loadAppraisalWithDeductions(id: number) {
   const supabase = getSupabase();
@@ -154,22 +176,119 @@ async function loadAppraisalWithDeductions(id: number) {
 async function handleList(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? "50") | 0));
-  // Accept either ?skip=N or ?page=N (page is 1-indexed)
   const pageParam = url.searchParams.get("page");
   const skip = pageParam !== null
     ? Math.max(0, (Math.max(1, Number(pageParam) | 0) - 1) * limit)
     : Math.max(0, Number(url.searchParams.get("skip") ?? "0") | 0);
 
+  const orderByRaw = url.searchParams.get("orderBy") ?? "vehicle_appraisal_id";
+  const orderBy = SORTABLE_COLUMNS.has(orderByRaw) ? orderByRaw : "vehicle_appraisal_id";
+  const orderDir = url.searchParams.get("orderDir") === "asc" ? "asc" : "desc";
+
+  const q = (url.searchParams.get("q") ?? "").trim();
+  const brand = (url.searchParams.get("brand") ?? "").trim();
+  const color = (url.searchParams.get("color") ?? "").trim();
+  const from = (url.searchParams.get("from") ?? "").trim();
+  const to = (url.searchParams.get("to") ?? "").trim();
+
   const supabase = getSupabase();
-  // Use { count: "exact" } in options, NOT in select string
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("vehicle_appraisal")
-    .select(APPRAISAL_COLUMNS, { count: "exact" })
-    .order("vehicle_appraisal_id", { ascending: false })
+    .select(APPRAISAL_COLUMNS, { count: "exact" });
+
+  if (q) {
+    const like = `%${q}%`;
+    query = query.or(
+      [
+        `plate_number.ilike.${like}`,
+        `owner.ilike.${like}`,
+        `applicant.ilike.${like}`,
+        `vin.ilike.${like}`,
+        `brand.ilike.${like}`,
+        `vehicle_description.ilike.${like}`,
+      ].join(","),
+    );
+  }
+  if (brand) query = query.ilike("brand", `%${brand}%`);
+  if (color) query = query.ilike("color", `%${color}%`);
+  if (from) query = query.gte("appraisal_date", from);
+  if (to) query = query.lte("appraisal_date", to);
+
+  const { data, error, count } = await query
+    .order(orderBy, { ascending: orderDir === "asc" })
     .range(skip, skip + limit - 1);
 
   if (error) return errorResponse(error.message, 500);
-  return jsonResponse({ items: data ?? [], total: count ?? 0, skip, limit });
+  return jsonResponse({
+    items: data ?? [],
+    total: count ?? 0,
+    skip,
+    limit,
+    orderBy,
+    orderDir,
+  });
+}
+
+async function handleBulkDelete(req: Request): Promise<Response> {
+  let body: { ids?: unknown };
+  try {
+    body = await req.json();
+  } catch (_) {
+    return errorResponse("Invalid JSON body", 400);
+  }
+  const ids = Array.isArray(body.ids)
+    ? body.ids.map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0)
+    : [];
+  if (!ids.length) return errorResponse("ids array required", 400);
+
+  const supabase = getSupabase();
+  // Cascade deductions manually (no FK ON DELETE CASCADE in this schema).
+  await supabase.from("appraisal_deductions").delete().in("vehicle_appraisal_id", ids);
+  const { error } = await supabase
+    .from("vehicle_appraisal")
+    .delete()
+    .in("vehicle_appraisal_id", ids);
+  if (error) return errorResponse(error.message, 500);
+  return jsonResponse({ deleted: ids.length, ids });
+}
+
+async function handleDuplicate(id: number): Promise<Response> {
+  const supabase = getSupabase();
+  const { data: src, error } = await supabase
+    .from("vehicle_appraisal")
+    .select(APPRAISAL_COLUMNS)
+    .eq("vehicle_appraisal_id", id)
+    .maybeSingle();
+  if (error) return errorResponse(error.message, 500);
+  if (!src) return errorResponse("Appraisal not found", 404);
+
+  const { vehicle_appraisal_id: _ignored, ...clone } = src as Record<string, unknown>;
+  const { data: created, error: cErr } = await supabase
+    .from("vehicle_appraisal")
+    .insert(clone)
+    .select(APPRAISAL_COLUMNS)
+    .single();
+  if (cErr || !created) return errorResponse(cErr?.message ?? "Could not duplicate", 500);
+
+  // Copy deductions
+  const { data: ded } = await supabase
+    .from("appraisal_deductions")
+    .select("description, amount")
+    .eq("vehicle_appraisal_id", id);
+  if (ded && ded.length > 0) {
+    const newId = (created as { vehicle_appraisal_id: number }).vehicle_appraisal_id;
+    const rows = ded.map((d) => ({
+      vehicle_appraisal_id: newId,
+      description: d.description ?? null,
+      amount: d.amount ?? null,
+    }));
+    await supabase.from("appraisal_deductions").insert(rows);
+  }
+
+  const result = await loadAppraisalWithDeductions(
+    (created as { vehicle_appraisal_id: number }).vehicle_appraisal_id,
+  );
+  return jsonResponse(result, 201);
 }
 
 async function handleSearch(req: Request): Promise<Response> {
@@ -266,6 +385,7 @@ async function handleUpdate(req: Request, id: number, _user: TokenUser): Promise
 
 async function handleDelete(id: number): Promise<Response> {
   const supabase = getSupabase();
+  await supabase.from("appraisal_deductions").delete().eq("vehicle_appraisal_id", id);
   const { error } = await supabase
     .from("vehicle_appraisal")
     .delete()
@@ -287,9 +407,13 @@ Deno.serve(withErrorBoundary(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  const { id, tail } = parseSubpath(url.pathname);
+  const { id, tail, subtail } = parseSubpath(url.pathname);
 
   if (req.method === "GET" && tail === "search") return handleSearch(req);
+  if (req.method === "POST" && tail === "bulk-delete") return handleBulkDelete(req);
+  if (req.method === "POST" && id !== null && subtail === "duplicate") {
+    return handleDuplicate(id);
+  }
   if (req.method === "GET" && id === null && tail === null) return handleList(req);
   if (req.method === "GET" && id !== null) {
     const result = await loadAppraisalWithDeductions(id);
