@@ -1,0 +1,22 @@
+# Supabase project config for the api-backend-trochez project.
+# Required by the Supabase CLI when running `supabase functions deploy`.
+
+project_id = "owgqfjxswaxwwwgkrbmq"
+
+[functions.api-security-signin]
+verify_jwt = false  # public — issues the JWT
+
+[functions.api-security-signup]
+verify_jwt = false  # uses our own JWT check (requireUser) — not Supabase Auth's
+
+[functions.api-users]
+verify_jwt = false
+
+[functions.api-appraisals]
+verify_jwt = false
+
+[functions.api-dashboard]
+verify_jwt = false
+
+[functions.certificates-appraisal]
+verify_jwt = false

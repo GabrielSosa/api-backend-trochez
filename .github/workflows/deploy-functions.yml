@@ -1,0 +1,64 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+      - ".github/workflows/deploy-functions.yml"
+  workflow_dispatch:
+
+env:
+  SUPABASE_PROJECT_ID: owgqfjxswaxwwwgkrbmq
+
+jobs:
+  deploy:
+    name: Deploy Edge Functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Verify CLI version
+        run: supabase --version
+
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deploy api-security-signin
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy api-security-signin --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Deploy api-security-signup
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy api-security-signup --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Deploy api-users
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy api-users --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Deploy api-appraisals
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy api-appraisals --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Deploy api-dashboard
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy api-dashboard --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Deploy certificates-appraisal
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy certificates-appraisal --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
