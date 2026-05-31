@@ -148,6 +148,12 @@ function formatDate(input: string | null): string {
 function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
   const formattedDate = formatDate(a.appraisal_date);
 
+  // Número de certificado real (columna `cert`, numeric → llega como 22374.0).
+  // Si no hay certificado cargado, el recuadro queda en blanco (no se cae al
+  // id interno autoincremental).
+  const certNum = toNumber(a.cert);
+  const formattedCert = certNum > 0 ? String(Math.trunc(certNum)) : "";
+
   const totalDeductions = deductions.reduce((sum, d) => sum + toNumber(d.amount), 0);
   const formattedTotalDeductions = `₡${fmtIntSpaced(totalDeductions)}`;
 
@@ -206,6 +212,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             background: white;
             position: relative;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
         .header-logo {
             position: absolute;
@@ -239,13 +247,13 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             text-align: center;
             font-size: 26px;
             font-weight: bold;
-            margin-top: 3cm;
-            margin-bottom: 1cm;
+            margin-top: 2cm;
+            margin-bottom: 0.5cm;
         }
         .info-section {
             background: #dbe7f3;
             padding: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
         .vehicle-info {
             width: 100%;
@@ -275,7 +283,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .diagnosis-content {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             font-size: 12px;
         }
         .diagnosis-content td {
@@ -304,7 +312,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            margin-top: 20px;
+            margin-top: 10px;
             width: 100%;
         }
         .value-box {
@@ -324,16 +332,18 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .notes-section {
             text-align: left;
             font-size: 12px;
-            margin: 15px 0;
+            margin: 8px 0;
+        }
+        /* Pie de página: fluye al final del contenedor y se ancla al fondo con
+           margin-top:auto, en lugar de posicionarse en absolute (que se solapaba
+           con el contenido cuando la tabla de Diagnóstico crece). */
+        .page-footer {
+            margin-top: auto;
         }
         .footer-note {
             font-size: 10px;
-            margin: 20px 0;
+            margin: 8px 0;
             text-align: justify;
-            position: absolute;
-            bottom: 160px;
-            left: 1cm;
-            right: 1cm;
         }
         .vin-section {
             display: flex;
@@ -341,20 +351,18 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             margin-top: 20px;
             border-top: 1px solid #000;
             padding-top: 10px;
-            position: absolute;
-            bottom: 80px;
-            left: 1cm;
-            right: 1cm;
             background: white;
         }
         .vin-label {
             font-weight: bold;
             font-size: 12px;
         }
+        .validity-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
         .validity-stamp {
-            position: absolute;
-            bottom: 15px;
-            right: 1.2cm;
             border: 2px solid red;
             color: red;
             padding: 6px 14px;
@@ -380,7 +388,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <div style="text-align: center;">${esc(formattedDate)}</div>
             SAN JOSE C.R<br>
             Tel. 8794-4104<br>
-            <div style="text-align: center; margin-top: 5px;">${esc(a.vehicle_appraisal_id)}</div>
+            <div style="text-align: center; margin-top: 5px;">${esc(formattedCert)}</div>
         </div>
         <div class="main-title">Certificado de Avalúo</div>
 
@@ -439,10 +447,10 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <div style="font-weight: bold;">NOTA: ${esc(a.notes)}</div>
         </div>
 
-        <div class="values-section" style="margin-bottom: 20px;">
+        <div class="values-section" style="margin-bottom: 10px;">
             <table style="width: 100%; border-collapse: separate; border-spacing: 40px 0;">
                 <tr>
-                    <td style="text-align: center; vertical-align: middle; height: 80px;">
+                    <td style="text-align: center; vertical-align: middle; height: 60px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
                             ${formattedBankValue ? `
                                 <div class="total-amount">${esc(formattedBankValue)}</div>
@@ -450,7 +458,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                             ` : ""}
                         </div>
                     </td>
-                    <td style="text-align: center; vertical-align: middle; height: 80px;">
+                    <td style="text-align: center; vertical-align: middle; height: 60px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
                             ${formattedAppraisalValue ? `
                                 <div class="total-amount">${esc(formattedAppraisalValue)}</div>
@@ -479,6 +487,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             </table>
         </div>
 
+        <div class="page-footer">
         <div class="footer-note">
             Nota: Los gastos de reparación y la depreciación por kilometraje están rebajados. Condiciones de Servicio: En lo sucesivo "la empresa" se refiere a Avalúos Trochez. El valor emitido en este documento se ha determinado en base a la experiencia de ventas pasada de autolotes y personas particulares y no podemos anticipar todos los factores presentes o futuros que afecten el mercado de Vehículos y por lo tanto modifiquen el valor de los mismos incluyendo pero limitándose a el valor de los combustibles, la tasa de impuestos de nuevos modelos o promociones especiales, la suspensión de producción o distribución de determinado modelo, publicidad positiva o negativa, percepciones, informes de desperfectos, cambios políticos o demográficos, desastres naturales y otras situaciones que tengan influencia sobre los valores de Vehículos.
         </div>
@@ -520,8 +529,11 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             </table>
         </div>
 
-        <div class="validity-stamp">
-            VALIDO POR ${esc(a.validity_days ?? "")} DIAS O ${esc(a.validity_kms ?? "")} KMS
+        <div class="validity-row">
+            <div class="validity-stamp">
+                VALIDO POR ${esc(a.validity_days ?? "")} DIAS O ${esc(a.validity_kms ?? "")} KMS
+            </div>
+        </div>
         </div>
     </div>
 </body>
