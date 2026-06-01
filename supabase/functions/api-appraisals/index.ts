@@ -28,6 +28,7 @@ interface AppraisalBody {
   mileage?: number | null;
   fuel_type?: string | null;
   engine_size?: string | null;
+  origin?: string | null;
   plate_number?: string | null;
   applicant?: string | null;
   owner?: string | null;
@@ -64,6 +65,7 @@ const APPRAISAL_COLUMNS = [
   "mileage",
   "fuel_type",
   "engine_size",
+  "origin",
   "plate_number",
   "applicant",
   "owner",
@@ -99,6 +101,7 @@ function pickAppraisalFields(body: AppraisalBody) {
     mileage: body.mileage ?? null,
     fuel_type: body.fuel_type ?? null,
     engine_size: body.engine_size ?? null,
+    origin: body.origin ?? null,
     plate_number: body.plate_number ?? null,
     applicant: body.applicant ?? null,
     owner: body.owner ?? null,

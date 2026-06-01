@@ -34,6 +34,7 @@ interface AppraisalRow {
   mileage: number | null;
   fuel_type: string | null;
   engine_size: number | string | null;
+  origin: string | null;
   vin: string | null;
   engine_number: string | null;
   applicant: string | null;
@@ -404,7 +405,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                         <table style="width: 100%;">
                             <tr>
                                 <td style="text-align: center;"><span class="small-label">AÑO</span>${esc(a.model_year)}</td>
-                                <td style="text-align: center;"><span class="small-label">ORIGEN</span>MEX/AGE</td>
+                                <td style="text-align: center;"><span class="small-label">ORIGEN</span>${a.origin ? esc(a.origin) : "MEX/AGE"}</td>
                                 <td style="text-align: center;"><span class="small-label">KM</span>${esc(a.mileage)}</td>
                                 <td style="text-align: center;"><span class="small-label">COMB</span>${esc(a.fuel_type)}</td>
                                 <td style="text-align: center;"><span class="small-label">CILINDRADA</span>${esc(a.engine_size)}</td>
@@ -551,6 +552,7 @@ const APPRAISAL_COLUMNS = [
   "mileage",
   "fuel_type",
   "engine_size",
+  "origin",
   "vin",
   "engine_number",
   "applicant",
