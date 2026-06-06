@@ -1,5 +1,5 @@
 // Routes (all require Bearer token):
-// GET  /api-appraisals?skip=0&limit=50&q=&orderBy=&orderDir=&brand=&color=&from=&to=
+// GET  /api-appraisals?skip=0&limit=50&q=&orderBy=&orderDir=&brand=&model=&year=&from=&to=
 //                                          -> paginated list with optional search, sort and filters
 // GET  /api-appraisals/search?q=...        -> kept for backwards compat; same effect as /api-appraisals?q=
 // GET  /api-appraisals/{id}                -> appraisal + deductions
@@ -190,7 +190,8 @@ async function handleList(req: Request): Promise<Response> {
 
   const q = (url.searchParams.get("q") ?? "").trim();
   const brand = (url.searchParams.get("brand") ?? "").trim();
-  const color = (url.searchParams.get("color") ?? "").trim();
+  const model = (url.searchParams.get("model") ?? "").trim();
+  const year = (url.searchParams.get("year") ?? "").trim();
   const from = (url.searchParams.get("from") ?? "").trim();
   const to = (url.searchParams.get("to") ?? "").trim();
 
@@ -213,7 +214,11 @@ async function handleList(req: Request): Promise<Response> {
     );
   }
   if (brand) query = query.ilike("brand", `%${brand}%`);
-  if (color) query = query.ilike("color", `%${color}%`);
+  if (model) query = query.ilike("vehicle_description", `%${model}%`);
+  if (year) {
+    const yearNum = parseInt(year, 10);
+    if (!isNaN(yearNum)) query = query.eq("model_year", yearNum);
+  }
   if (from) query = query.gte("appraisal_date", from);
   if (to) query = query.lte("appraisal_date", to);
 
