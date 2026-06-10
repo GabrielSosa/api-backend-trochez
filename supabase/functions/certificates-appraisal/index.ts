@@ -239,10 +239,10 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             position: absolute;
             top: 0.65cm;
             right: 0.9cm;
-            text-align: right;
-            font-size: 14px;
+            text-align: center;
+            font-size: 11px;
             border: 1px solid #000;
-            padding: 10px 15px;
+            padding: 6px 10px;
         }
         .main-title {
             text-align: center;
