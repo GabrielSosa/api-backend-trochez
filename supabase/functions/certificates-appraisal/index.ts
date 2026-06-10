@@ -259,38 +259,39 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .vehicle-info {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 0;
             table-layout: fixed;
+            font-size: 11px;
         }
         .vehicle-info td {
-            padding: 5px;
+            padding: 3px 5px;
         }
         .label-cell {
             font-weight: bold;
-            width: 100px;
+            width: 90px;
             background-color: #dbe7f3;
         }
         .small-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #666;
             display: block;
         }
         .diagnosis-header {
             background-color: #dbe7f3;
-            padding: 4px 8px;
+            padding: 5px 8px;
             font-weight: bold;
             font-size: 12px;
         }
         .diagnosis-content {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 0;
             font-size: 12px;
         }
         .diagnosis-content td {
-            padding: 4px 8px;
+            padding: 5px 8px;
             border-bottom: 1px dotted #ccc;
-            line-height: 1.3;
+            line-height: 1.35;
         }
         .diagnosis-content td:last-child {
             text-align: right;
@@ -397,11 +398,11 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <table class="vehicle-info" style="margin-bottom: 0;">
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Vehículo</td>
-                    <td style="background-color: white; padding: 5px 10px; width: 30%; line-height: 1.3;">
+                    <td style="background-color: white; padding: 3px 8px; width: 30%; line-height: 1.3;">
                         <div>${esc(a.brand)}</div>
                         <div style="margin-top: 2px;">${esc(a.vehicle_description)}</div>
                     </td>
-                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
+                    <td style="padding: 3px 8px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td style="text-align: center;"><span class="small-label">AÑO</span>${esc(a.model_year)}</td>
@@ -415,8 +416,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                 </tr>
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Solicitante</td>
-                    <td style="background-color: white; padding: 5px 10px;" colspan="1">${esc(a.applicant)}</td>
-                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
+                    <td style="background-color: white; padding: 3px 8px;" colspan="1">${esc(a.applicant)}</td>
+                    <td style="padding: 3px 8px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td style="text-align: left;"><span class="small-label">COLOR</span>${esc(a.color)}</td>
@@ -428,8 +429,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                 </tr>
                 <tr>
                     <td class="label-cell" style="width: 100px; border-bottom: 2px solid white;">Propietario</td>
-                    <td style="background-color: white; padding: 5px 10px;" colspan="1">${esc(a.owner)}</td>
-                    <td style="padding: 5px 10px; background-color: #dbe7f3;" colspan="5">
+                    <td style="background-color: white; padding: 3px 8px;" colspan="1">${esc(a.owner)}</td>
+                    <td style="padding: 3px 8px; background-color: #dbe7f3;" colspan="5">
                         <table style="width: 100%;">
                             <tr>
                                 <td colspan="6">${esc(a.extras)}</td>
