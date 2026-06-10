@@ -381,7 +381,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
 <body>
     <div class="page-container">
         <div class="header-logo">
-            <img src="${LOGO_DATA_URL}" alt="Logo Avalúo Trochez" style="max-height: 180px; max-width: 100%;">
+            <img src="${LOGO_DATA_URL}" alt="Logo Avalúo Trochez" style="max-height: 100px; max-width: 100%;">
         </div>
         <div class="watermark">
             <img src="${LOGO_DATA_URL}" alt="Watermark">
