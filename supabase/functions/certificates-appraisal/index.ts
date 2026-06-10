@@ -208,7 +208,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .page-container {
             width: 21.59cm;
             height: 27.94cm;
-            padding: 1cm;
+            padding: 0.65cm 0.9cm;
             margin: 0 auto;
             background: white;
             position: relative;
@@ -218,8 +218,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         }
         .header-logo {
             position: absolute;
-            top: 1cm;
-            left: 1cm;
+            top: 0.65cm;
+            left: 0.9cm;
             padding: 0;
             max-width: 200px;
         }
@@ -237,8 +237,8 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         }
         .header-info {
             position: absolute;
-            top: 1cm;
-            right: 1cm;
+            top: 0.65cm;
+            right: 0.9cm;
             text-align: right;
             font-size: 14px;
             border: 1px solid #000;
@@ -248,13 +248,13 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             text-align: center;
             font-size: 26px;
             font-weight: bold;
-            margin-top: 2cm;
-            margin-bottom: 0.5cm;
+            margin-top: 1.4cm;
+            margin-bottom: 0.25cm;
         }
         .info-section {
             background: #dbe7f3;
             padding: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .vehicle-info {
             width: 100%;
@@ -313,7 +313,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            margin-top: 10px;
+            margin-top: 4px;
             width: 100%;
         }
         .value-box {
@@ -328,12 +328,12 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             width: 100%;
             display: flex;
             justify-content: flex-end;
-            margin-top: 15px;
+            margin-top: 6px;
         }
         .notes-section {
             text-align: left;
             font-size: 12px;
-            margin: 8px 0;
+            margin: 3px 0;
         }
         /* Pie de página: fluye al final del contenedor y se ancla al fondo con
            margin-top:auto, en lugar de posicionarse en absolute (que se solapaba
@@ -343,7 +343,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         }
         .footer-note {
             font-size: 10px;
-            margin: 8px 0;
+            margin: 4px 0;
             text-align: justify;
         }
         .vin-section {
@@ -361,7 +361,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
         .validity-row {
             display: flex;
             justify-content: flex-end;
-            margin-top: 12px;
+            margin-top: 6px;
         }
         .validity-stamp {
             border: 2px solid red;
@@ -448,10 +448,10 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             <div style="font-weight: bold;">NOTA: ${esc(a.notes)}</div>
         </div>
 
-        <div class="values-section" style="margin-bottom: 10px;">
+        <div class="values-section" style="margin-bottom: 4px;">
             <table style="width: 100%; border-collapse: separate; border-spacing: 40px 0;">
                 <tr>
-                    <td style="text-align: center; vertical-align: middle; height: 60px;">
+                    <td style="text-align: center; vertical-align: middle; height: 46px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
                             ${formattedBankValue ? `
                                 <div class="total-amount">${esc(formattedBankValue)}</div>
@@ -459,7 +459,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
                             ` : ""}
                         </div>
                     </td>
-                    <td style="text-align: center; vertical-align: middle; height: 60px;">
+                    <td style="text-align: center; vertical-align: middle; height: 46px;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
                             ${formattedAppraisalValue ? `
                                 <div class="total-amount">${esc(formattedAppraisalValue)}</div>
