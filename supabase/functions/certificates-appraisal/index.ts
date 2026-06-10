@@ -248,7 +248,7 @@ function renderHtml(a: AppraisalRow, deductions: DeductionRow[]): string {
             text-align: center;
             font-size: 26px;
             font-weight: bold;
-            margin-top: 1.4cm;
+            margin-top: 2cm;
             margin-bottom: 0.25cm;
         }
         .info-section {
