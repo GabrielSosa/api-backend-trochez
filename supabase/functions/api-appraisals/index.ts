@@ -220,7 +220,16 @@ async function handleList(req: Request): Promise<Response> {
     const yearNum = parseInt(year, 10);
     if (!isNaN(yearNum)) query = query.eq("model_year", yearNum);
   }
-  if (fuel) query = query.ilike("fuel_type", `%${fuel}%`);
+  if (fuel) {
+    const fuelUp = fuel.toUpperCase();
+    if (/H[IÍ]BRID/.test(fuelUp)) {
+      query = query.or("fuel_type.ilike.%hibrid%,fuel_type.ilike.%híbrid%");
+    } else if (/EL[EÉ]CTRIC|^ELE$/.test(fuelUp)) {
+      query = query.or("fuel_type.ilike.%electr%,fuel_type.ilike.%éléc%,fuel_type.ilike.%eléc%");
+    } else {
+      query = query.ilike("fuel_type", `%${fuel}%`);
+    }
+  }
   if (from) query = query.gte("appraisal_date", from);
   if (to) query = query.lte("appraisal_date", to);
 
