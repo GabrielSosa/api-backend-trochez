@@ -192,6 +192,7 @@ async function handleList(req: Request): Promise<Response> {
   const brand = (url.searchParams.get("brand") ?? "").trim();
   const model = (url.searchParams.get("model") ?? "").trim();
   const year = (url.searchParams.get("year") ?? "").trim();
+  const fuel = (url.searchParams.get("fuel") ?? "").trim();
   const from = (url.searchParams.get("from") ?? "").trim();
   const to = (url.searchParams.get("to") ?? "").trim();
 
@@ -219,6 +220,7 @@ async function handleList(req: Request): Promise<Response> {
     const yearNum = parseInt(year, 10);
     if (!isNaN(yearNum)) query = query.eq("model_year", yearNum);
   }
+  if (fuel) query = query.ilike("fuel_type", `%${fuel}%`);
   if (from) query = query.gte("appraisal_date", from);
   if (to) query = query.lte("appraisal_date", to);
 
