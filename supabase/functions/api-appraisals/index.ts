@@ -193,6 +193,8 @@ async function handleList(req: Request): Promise<Response> {
   const model = (url.searchParams.get("model") ?? "").trim();
   const year = (url.searchParams.get("year") ?? "").trim();
   const fuel = (url.searchParams.get("fuel") ?? "").trim();
+  const engine = (url.searchParams.get("engine") ?? "").trim();
+  const plate = (url.searchParams.get("plate") ?? "").trim();
   const from = (url.searchParams.get("from") ?? "").trim();
   const to = (url.searchParams.get("to") ?? "").trim();
 
@@ -230,6 +232,8 @@ async function handleList(req: Request): Promise<Response> {
       query = query.ilike("fuel_type", `%${fuel}%`);
     }
   }
+  if (engine) query = query.ilike("engine_size", `%${engine}%`);
+  if (plate) query = query.ilike("plate_number", `%${plate}%`);
   if (from) query = query.gte("appraisal_date", from);
   if (to) query = query.lte("appraisal_date", to);
 
