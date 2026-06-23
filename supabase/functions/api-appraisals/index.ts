@@ -218,9 +218,9 @@ async function handleList(req: Request): Promise<Response> {
   }
   if (brand) query = query.ilike("brand", `%${brand}%`);
   if (model) {
-    // Use word-boundary regex (\m = start of word) so "X4" doesn't match inside "4X4" (4WD suffix).
-    const escapedModel = model.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    query = query.filter("vehicle_description", "~*", `\\m${escapedModel}`);
+    // Anchor to start of string so "X4" doesn't match "4X4" (4WD suffix in descriptions).
+    // vehicle_description always starts with the model name ("X4 20D 5 PUERTAS 4X4 TODA EXTRA").
+    query = query.ilike("vehicle_description", `${model}%`);
   }
   if (year) {
     const yearNum = parseInt(year, 10);
