@@ -217,7 +217,11 @@ async function handleList(req: Request): Promise<Response> {
     );
   }
   if (brand) query = query.ilike("brand", `%${brand}%`);
-  if (model) query = query.ilike("vehicle_description", `%${model}%`);
+  if (model) {
+    // Use word-boundary regex (\m = start of word) so "X4" doesn't match inside "4X4" (4WD suffix).
+    const escapedModel = model.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    query = query.filter("vehicle_description", "~*", `\\m${escapedModel}`);
+  }
   if (year) {
     const yearNum = parseInt(year, 10);
     if (!isNaN(yearNum)) query = query.eq("model_year", yearNum);
